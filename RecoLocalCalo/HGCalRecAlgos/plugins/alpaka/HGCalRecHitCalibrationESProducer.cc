@@ -193,7 +193,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               << ", sf_from_config = " << sf_from_config << std::endl;
           if (sf_from_config <= 0)
             throw cms::Exception("ConfigError") << "EM reconstruction scale factor (SF_thickness_Si) is not positive.";
-
           float sf = 1. / sf_from_config;
           dEdx *= sf * 1e-3;  // apply correction and convert from MeV to GeV
           fill_SoA_column_single<float>(product.view().EM_scale().data(), dEdx, offset, nrows);

@@ -90,11 +90,7 @@ void HGCalCLUEAlgoT<T, STRATEGY>::populate(const HGCRecHitCollection &hits) {
 // input (reset should be called between events)
 template <typename T, typename STRATEGY>
 void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
-<<<<<<< HEAD
   for (auto l = 0u; l < 2 * maxlayer_ + 2; ++l) {
-=======
-  for (auto l = 0u; l < maxlayer_; ++l) {
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
     float delta;
     if constexpr (std::is_same_v<STRATEGY, HGCalSiliconStrategy>) {
       // maximum search distance (critical distance) for local density
@@ -112,7 +108,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
       delta = delta_r;
     }
 
-<<<<<<< HEAD
     const auto nhits = cells_[l].dim1.size();
     cells_[l].clusterIndex.resize(nhits);
     if (nhits > 0u) {
@@ -126,15 +121,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
       auto seeds = clusterer.getSeeds();
       std::ranges::copy(seeds, std::back_inserter(cells_[l].seeds));
       }
-=======
-    auto clusterer = clue::Clusterer<2>(delta, kappa_);
-    auto queue = clue::get_queue(0u);
-    auto points = clue::PointsHost<2>(
-        queue, cells_[l].dim1.size(), cells_[l].dim1, cells_[l].dim2, cells_[l].weight, cells_[l].clusterIndex);
-    points.set_density_uncertainty(cells_[l].sigmaNoise);
-    clusterer.make_clusters(points);
-    numberOfClustersPerLayer_[l] = points.n_clusters();
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
   }
 #if DEBUG_CLUSTERS_ALPAKA
   hgcalUtils::DumpLegacySoA dumperLegacySoA;
@@ -143,14 +129,11 @@ void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
 }
 
 template <typename T, typename STRATEGY>
-<<<<<<< HEAD
 std::vector<reco::BasicCluster> HGCalCLUEAlgoT<T, STRATEGY>::getClustersLegacy(bool) {
   return std::vector<reco::BasicCluster>(1);
 }
 
 template <typename T, typename STRATEGY>
-=======
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
 ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool) {
   std::vector<int> offsets(numberOfClustersPerLayer_.size(), 0);
   int maxClustersOnLayer = numberOfClustersPerLayer_[0];
@@ -171,19 +154,10 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
   auto actual_clusters = 0;
   for (unsigned int layerId = 0; layerId < 2 * maxlayer_ + 2; ++layerId) {
     auto queue = clue::get_queue(0u);
-<<<<<<< HEAD
     auto points = clue::make_clustered_points<2>(
         queue, cells_[layerId].dim1, cells_[layerId].dim2, cells_[layerId].weight, cells_[layerId].clusterIndex);
     if (points.size() <= 0 || numberOfClustersPerLayer_[layerId] == 0)
       continue;
-=======
-    auto points = clue::PointsHost<2>(queue,
-                                      cells_[layerId].dim1.size(),
-                                      cells_[layerId].dim1,
-                                      cells_[layerId].dim2,
-                                      cells_[layerId].weight,
-                                      cells_[layerId].clusterIndex);
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
 
     const auto hits_before = cluster_hit_associations.size();
     auto clustered = [](auto cluster_index) { return cluster_index != -1; };
@@ -194,7 +168,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
                       std::back_inserter(cluster_hit_associations));
 
     auto clusters = clue::get_clusters(points);
-<<<<<<< HEAD
     const auto detid_before = detid_and_fractions.size();
     for (auto i = 0u; i < cells_[layerId].clusterIndex.size(); ++i) {
       if (cells_[layerId].clusterIndex[i] >= 0) {
@@ -202,10 +175,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       }
     }
     actual_clusters += clusters.size();
-=======
-    auto to_hit_and_fraction = [&](auto idx) { return ticl::HitAndFraction{cells_[layerId].detid[idx], -1.f}; };
-    std::ranges::copy(clusters | std::views::transform(to_hit_and_fraction), std::back_inserter(detid_and_fractions));
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
     for (auto cl = 0u; cl < clusters.size(); ++cl) {
       const auto cluster = clusters[cl];
       auto x = 0.f;
@@ -213,7 +182,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       const auto z = cells_[layerId].layerDim3;
       auto energy = std::reduce(
           cluster.begin(), cluster.end(), 0.f, [&](auto acc, auto idx) { return acc + points.weights()[idx]; });
-<<<<<<< HEAD
 
       auto max_energy_idx = cluster[0];
       for (auto p : cluster) {
@@ -221,10 +189,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
               max_energy_idx = p;
       }
 
-=======
-      auto max_energy_it = std::ranges::max_element(points.weights());
-      const auto max_energy_idx = std::distance(points.weights().begin(), max_energy_it);
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
       const auto max_energy_detid = cells_[layerId].detid[max_energy_idx];
 
       if constexpr (std::is_same_v<STRATEGY, HGCalSiliconStrategy>) {
@@ -256,25 +220,17 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       }
 
       auto globalClusterIndex = cl + offsets[layerId];
-<<<<<<< HEAD
       auto layer_clusters_view = clusters_and_associations.layer_clusters->view();
       layer_clusters_view.position().x()[globalClusterIndex] = x;
       layer_clusters_view.position().y()[globalClusterIndex] = y;
       layer_clusters_view.position().z()[globalClusterIndex] = z;
       layer_clusters_view.position().layer()[globalClusterIndex] = static_cast<int>(layerId);
       layer_clusters_view.position().cells()[globalClusterIndex] = static_cast<int>(clusters.count(cl));
-=======
-      auto &layer_clusters_view = clusters_and_associations.layer_clusters->view();
-      layer_clusters_view.position().x()[globalClusterIndex] = x;
-      layer_clusters_view.position().y()[globalClusterIndex] = y;
-      layer_clusters_view.position().z()[globalClusterIndex] = z;
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
       layer_clusters_view.energy().energy()[globalClusterIndex] = energy;
       layer_clusters_view.energy().correctedEnergy()[globalClusterIndex] = -1.f;
       layer_clusters_view.energy().correctedEnergyUncertainty()[globalClusterIndex] = -1.f;
       layer_clusters_view.indexes().caloID()[globalClusterIndex] = reco::CaloID::DET_HGCAL_ENDCAP;
       layer_clusters_view.indexes().algoID()[globalClusterIndex] = algoId_;
-<<<<<<< HEAD
       layer_clusters_view.indexes().seedID()[globalClusterIndex] = cells_[layerId].seeds[cl];
       layer_clusters_view.indexes().flags()[globalClusterIndex] = 0;
     }
@@ -290,20 +246,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       static_cast<std::span<const int>>(cluster_hit_associations),
       static_cast<std::span<const ticl::HitAndFraction>>(detid_and_fractions));
 
-=======
-      // TODO: do we really care about the seed?
-      // layer_clusters.view().indexes().seedID()[globalClusterIndex] = seedDetId;
-      layer_clusters_view.indexes().flags()[globalClusterIndex] = 0;
-    }
-  }
-  alpaka_serial_sync::Queue queue(cms::alpakatools::host());
-  ticl::associator::fill<alpaka_serial_sync::Acc1D>(
-      queue,
-      clusters_and_associations.hits_and_fractions->view(),
-      static_cast<std::span<const int>>(cluster_hit_associations),
-      static_cast<std::span<const ticl::HitAndFraction>>(detid_and_fractions));
-
->>>>>>> 70bbaa5b0df (Update legacy LC producer (missing timing))
   return clusters_and_associations;
 }
 

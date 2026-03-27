@@ -107,7 +107,6 @@ void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
       float delta_r = vecDeltas_[3];
       delta = delta_r;
     }
-    cells_[l].clusterIndex.resize(cells_[l].dim1.size());
 
     const auto nhits = cells_[l].dim1.size();
     cells_[l].clusterIndex.resize(nhits);

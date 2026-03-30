@@ -67,7 +67,6 @@ private:
   const edm::EDGetTokenT<reco::CaloClusterHostCollection> clusters_token_;
   const edm::EDGetTokenT<std::vector<float>> filtered_layerclusters_mask_token_;
   const edm::EDGetTokenT<std::vector<float>> original_layerclusters_mask_token_;
-  const edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> clustersTime_token_;
 
   edm::EDGetTokenT<TICLLayerTiles> layer_clusters_tiles_token_;
   edm::EDGetTokenT<TICLLayerTilesHFNose> layer_clusters_tiles_hfnose_token_;
@@ -88,8 +87,6 @@ TrackstersProducer::TrackstersProducer(const edm::ParameterSet& ps, ticl::TICLON
       clusters_token_(consumes<reco::CaloClusterHostCollection>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       filtered_layerclusters_mask_token_(consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("filtered_mask"))),
       original_layerclusters_mask_token_(consumes<std::vector<float>>(ps.getParameter<edm::InputTag>("original_mask"))),
-      clustersTime_token_(
-          consumes<edm::ValueMap<std::pair<float, float>>>(ps.getParameter<edm::InputTag>("time_layerclusters"))),
       seeding_regions_token_(
           consumes<std::vector<TICLSeedingRegion>>(ps.getParameter<edm::InputTag>("seeding_regions"))),
       geometry_token_(esConsumes<CaloGeometry, CaloGeometryRecord, edm::Transition::BeginRun>()),
@@ -256,4 +253,67 @@ void TrackstersProducer::fillDescriptions(edm::ConfigurationDescriptions& descri
   desc.add<edm::ParameterSetDescription>("pluginInferenceAlgoTracksterInferenceByPFN", inferenceDescPFN);
 
   descriptions.add("trackstersProducer", desc);
+}
+
+void TrackstersProducer::produce(edm::Event& evt, const edm::EventSetup& es) {
+  auto result = std::make_unique<std::vector<Trackster>>();
+  auto initialResult = std::make_unique<std::vector<Trackster>>();
+  auto output_mask = std::make_unique<std::vector<float>>();
+
+  const std::vector<float>& original_layerclusters_mask = evt.get(original_layerclusters_mask_token_);
+  const auto& layerClusters = evt.get(clusters_token_);
+  const auto& inputClusterMask = evt.get(filtered_layerclusters_mask_token_);
+  const auto& seeding_regions = evt.get(seeding_regions_token_);
+
+  std::unordered_map<int, std::vector<int>> seedToTrackstersAssociation;
+  // if it's regional iteration and there are seeding regions
+  if (!seeding_regions.empty()) {
+    if (seeding_regions[0].index != -1) {
+      auto numberOfSeedingRegions = seeding_regions.size();
+      for (unsigned int i = 0; i < numberOfSeedingRegions; ++i) {
+        seedToTrackstersAssociation.emplace(seeding_regions[i].index, 0);
+      }
+    }
+
+    if (doNose_) {
+      const auto& layer_clusters_hfnose_tiles = evt.get(layer_clusters_tiles_hfnose_token_);
+      const typename PatternRecognitionAlgoBaseT<TICLLayerTilesHFNose>::Inputs inputHFNose(
+          evt, es, layerClusters, inputClusterMask, layer_clusters_hfnose_tiles, seeding_regions);
+
+      myAlgoHFNose_->makeTracksters(inputHFNose, *initialResult, seedToTrackstersAssociation);
+      // Run inference algorithm
+      inferenceAlgo_->inputData(layerClusters, *initialResult, rhtools_);
+      inferenceAlgo_->runInference(*initialResult);
+      myAlgoHFNose_->filter(*result, *initialResult, inputHFNose, seedToTrackstersAssociation);
+
+    } else {
+      const auto& layer_clusters_tiles = evt.get(layer_clusters_tiles_token_);
+      const typename PatternRecognitionAlgoBaseT<TICLLayerTiles>::Inputs input(
+          evt, es, layerClusters, inputClusterMask, layer_clusters_tiles, seeding_regions);
+
+      myAlgo_->makeTracksters(input, *initialResult, seedToTrackstersAssociation);
+      // Run inference algorithm
+      inferenceAlgo_->inputData(layerClusters, *initialResult, rhtools_);
+      inferenceAlgo_->runInference(*initialResult);
+      myAlgo_->filter(*result, *initialResult, input, seedToTrackstersAssociation);
+    }
+  }
+  // Now update the global mask and put it into the event
+  output_mask->reserve(original_layerclusters_mask.size());
+  // Copy over the previous state
+  std::copy(
+      std::begin(original_layerclusters_mask), std::end(original_layerclusters_mask), std::back_inserter(*output_mask));
+
+  for (auto& trackster : *result) {
+    trackster.setIteration(iterIndex_);
+    // Mask the used elements, accordingly
+    for (auto const v : trackster.vertices()) {
+      // TODO(rovere): for the moment we mask the layer cluster completely. In
+      // the future, properly compute the fraction of usage.
+      (*output_mask)[v] = 0.;
+    }
+  }
+
+  evt.put(std::move(result));
+  evt.put(std::move(output_mask));
 }

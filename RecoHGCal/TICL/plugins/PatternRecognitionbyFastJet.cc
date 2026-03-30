@@ -145,9 +145,8 @@ void PatternRecognitionbyFastJet<TILES>::makeTracksters(
 
   ticl::assignPCAtoTracksters(result,
                               input.layerClusters,
-                              input.layerClustersTime,
-                              rhtools->getPositionLayer(rhtools->lastLayerEE(isHFnose), isHFnose).z(),
-                              *rhtools,
+                              rhtools_.getPositionLayer(rhtools_.lastLayerEE(isHFnose), isHFnose).z(),
+                              rhtools_,
                               computeLocalTime_);
 
   // run energy regression and ID

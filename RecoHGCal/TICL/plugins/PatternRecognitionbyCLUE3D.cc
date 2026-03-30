@@ -339,9 +339,8 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
 
   ticl::assignPCAtoTracksters(result,
                               input.layerClusters,
-                              input.layerClustersTime,
-                              rhtools->getPositionLayer(rhtools->lastLayerEE(false), false).z(),
-                              *rhtools,
+                              rhtools_.getPositionLayer(rhtools_.lastLayerEE(false), false).z(),
+                              rhtools_,
                               computeLocalTime_,
                               true,  // energy weighting
                               usePCACleaning_);

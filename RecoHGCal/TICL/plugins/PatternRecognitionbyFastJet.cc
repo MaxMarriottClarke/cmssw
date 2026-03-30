@@ -83,8 +83,8 @@ void PatternRecognitionbyFastJet<TILES>::makeTracksters(
     const typename PatternRecognitionAlgoBaseT<TILES>::Inputs &input,
     std::vector<Trackster> &result,
     std::unordered_map<int, std::vector<int>> &seedToTracksterAssociation) {
-  auto clusters = input.layerClusters.view();
   // Protect from events with no seeding regions
+  auto clusters = input.layerClusters.view();
   if (input.regions.empty())
     return;
 
@@ -130,8 +130,9 @@ void PatternRecognitionbyFastJet<TILES>::makeTracksters(
           math::XYZVector direction(clusters.position()[clusterIdx].x(),
                                     clusters.position()[clusterIdx].y(),
                                     clusters.position()[clusterIdx].z());
+
           direction = direction.Unit();
-          direction *= clusters.energy()[clusterIdx].energy();
+          direction *= clusters.energy()[clusteridx].energy();
           auto fpj = fastjet::PseudoJet(direction.X(), direction.Y(), direction.Z(), clusters.energy()[clusterIdx].energy());
           fpj.set_user_index(clusterIdx);
           fjInputs.push_back(fpj);
@@ -145,7 +146,6 @@ void PatternRecognitionbyFastJet<TILES>::makeTracksters(
 
   ticl::assignPCAtoTracksters(result,
                               input.layerClusters,
-                              input.layerClustersTime,
                               rhtools->getPositionLayer(rhtools->lastLayerEE(isHFnose), isHFnose).z(),
                               *rhtools,
                               computeLocalTime_);

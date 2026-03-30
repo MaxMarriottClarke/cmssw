@@ -64,7 +64,6 @@ private:
   const edm::EDGetTokenT<reco::CaloClusterHostCollection> clusters_token_;
   const edm::EDGetTokenT<std::vector<float>> filtered_layerclusters_mask_token_;
   const edm::EDGetTokenT<std::vector<float>> original_layerclusters_mask_token_;
-
   edm::EDGetTokenT<TICLLayerTiles> layer_clusters_tiles_token_;
   edm::EDGetTokenT<TICLLayerTilesHFNose> layer_clusters_tiles_hfnose_token_;
   const edm::EDGetTokenT<std::vector<TICLSeedingRegion>> seeding_regions_token_;
@@ -250,3 +249,4 @@ void TrackstersProducer::fillDescriptions(edm::ConfigurationDescriptions& descri
 
   descriptions.add("trackstersProducer", desc);
 }
+

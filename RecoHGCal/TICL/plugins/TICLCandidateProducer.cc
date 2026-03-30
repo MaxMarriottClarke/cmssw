@@ -14,7 +14,7 @@
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "DataFormats/Common/interface/OrphanHandle.h"
 
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
 #include "DataFormats/HGCalReco/interface/Common.h"
 #include "DataFormats/HGCalReco/interface/MtdHostCollection.h"
 #include "DataFormats/HGCalReco/interface/TICLLayerTile.h"
@@ -85,8 +85,7 @@ private:
   std::vector<edm::EDGetTokenT<std::vector<Trackster>>> general_tracksters_tokens_;
   std::vector<edm::EDGetTokenT<std::vector<std::vector<unsigned>>>> general_tracksterlinks_tokens_;
 
-  const edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
-  const edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> clustersTime_token_;
+  const edm::EDGetTokenT<reco::CaloClusterHostCollection> clusters_token_;
   const bool regressionAndPid_;
   std::unique_ptr<TracksterInferenceAlgoBase> inferenceAlgo_;
 
@@ -121,9 +120,7 @@ private:
 };
 
 TICLCandidateProducer::TICLCandidateProducer(const edm::ParameterSet &ps, const ticl::TICLONNXGlobalCache *cache)
-    : clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
-      clustersTime_token_(
-          consumes<edm::ValueMap<std::pair<float, float>>>(ps.getParameter<edm::InputTag>("layer_clustersTime"))),
+    : clusters_token_(consumes<reco::CaloClusterHostCollection>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       regressionAndPid_(ps.getParameter<bool>("regressionAndPid")),
       tracks_token_(consumes<std::vector<reco::Track>>(ps.getParameter<edm::InputTag>("tracks"))),
       muons_token_(consumes<std::vector<reco::Muon>>(ps.getParameter<edm::InputTag>("muons"))),
@@ -269,7 +266,6 @@ void TICLCandidateProducer::produce(edm::Event &evt, const edm::EventSetup &es) 
   auto linkedResultTracksters = std::make_unique<std::vector<std::vector<unsigned int>>>();
 
   const auto &layerClusters = evt.get(clusters_token_);
-  const auto &layerClustersTimes = evt.get(clustersTime_token_);
   edm::Handle<reco::MuonCollection> muons_h;
   evt.getByToken(muons_token_, muons_h);
 
@@ -289,7 +285,7 @@ void TICLCandidateProducer::produce(edm::Event &evt, const edm::EventSetup &es) 
 
   // loop over the original_masks_tokens_ and get the original masks collections and multiply them
   // to get the global mask
-  std::vector<float> original_global_mask(layerClusters.size(), 1.f);
+  std::vector<float> original_global_mask(layerClusters.size()[0], 1.f);
   for (unsigned int i = 0; i < original_masks_tokens_.size(); ++i) {
     const auto &tmp_mask = evt.get(original_masks_tokens_[i]);
     for (unsigned int j = 0; j < tmp_mask.size(); ++j) {
@@ -329,7 +325,6 @@ void TICLCandidateProducer::produce(edm::Event &evt, const edm::EventSetup &es) 
   const typename TICLInterpretationAlgoBase<reco::Track>::Inputs input(evt,
                                                                        es,
                                                                        layerClusters,
-                                                                       layerClustersTimes,
                                                                        generalTrackstersSpan,
                                                                        generalTracksterLinksGlobalId,
                                                                        tracks_h,
@@ -346,7 +341,6 @@ void TICLCandidateProducer::produce(edm::Event &evt, const edm::EventSetup &es) 
 
   assignPCAtoTracksters(*resultTracksters,
                         layerClusters,
-                        layerClustersTimes,
                         rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z(),
                         rhtools_,
                         true);

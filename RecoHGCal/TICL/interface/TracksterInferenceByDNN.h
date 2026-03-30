@@ -15,9 +15,10 @@ namespace ticl {
 
   class TracksterInferenceByDNN final : public TracksterInferenceAlgoBase {
   public:
+<<<<<<< HEAD
     explicit TracksterInferenceByDNN(const edm::ParameterSet& conf, TICLONNXGlobalCache const* cache);
 
-    void runInference(const std::vector<reco::CaloCluster>& layerClusters,
+    void runInference(const reco::CaloClusterHostCollection& layerClusters,
                       std::vector<Trackster>& tracksters,
                       const hgcal::RecHitTools& rhtools) const override;
 

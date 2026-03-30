@@ -37,7 +37,7 @@ namespace ticl {
     enabled_ = ((doPID_ != 0 && onnxPIDSession_ != nullptr) || (doRegression_ != 0 && onnxEnergySession_ != nullptr));
   }
 
-  void TracksterInferenceByPFN::runInference(const std::vector<reco::CaloCluster>& layerClusters,
+  void TracksterInferenceByPFN::runInference(const reco::CaloClusterHostCollection& layerClusters,
                                              std::vector<Trackster>& tracksters,
                                              const hgcal::RecHitTools& rhtools) const {
     if (!enabled_ || tracksters.empty()) {
@@ -69,6 +69,7 @@ namespace ticl {
       return;
     }
 
+<<<<<<< HEAD
     const int mb = std::max(1, miniBatchSize_);
 
     // Scratch buffers are local to this event.

@@ -120,6 +120,8 @@ void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
       clusterer.make_clusters(points);
       numberOfClustersPerLayer_[l] = points.n_clusters();
 
+      std::cout << "layer = " << l << " nclusters = " << points.n_clusters() << std::endl;
+
       auto seeds = clusterer.getSeeds();
       std::ranges::copy(seeds, std::back_inserter(cells_[l].seeds));
     }
@@ -161,7 +163,7 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
                                       cells_[layerId].dim2,
                                       cells_[layerId].weight,
                                       cells_[layerId].clusterIndex);
-    if (points.size() <= 0)
+    if (points.size() <= 0 || numberOfClustersPerLayer_[layerId] == 0)
       continue;
 
     std::ranges::copy(points.clusterIndexes(), std::back_inserter(cluster_hit_associations));

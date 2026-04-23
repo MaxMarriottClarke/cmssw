@@ -43,8 +43,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       //   }
       // }
 
+      
+      const auto metric = clue::metrics::WeightedChebyshev<3>{(float)m_w1, (float)m_w2, (float)m_w3}; 
+
       clue::Clusterer<3> clusterer(queue, m_dc, m_rhoc, m_dm);
-      clusterer.make_clusters(queue, d_points);
+      clusterer.make_clusters(queue, d_points, metric);
       // create hosts points and do the copy
       clue::PointsHost<3> h_points(queue, n);
       clue::copyToHost(queue, h_points, d_points);
@@ -161,6 +164,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     iDesc.add<double>("rho_c", 6.);
     iDesc.add<double>("dc", 2.);
     iDesc.add<double>("dm", 1.8);
+    iDesc.add<double>("w1", 1.0);
+    iDesc.add<double>("w2", 1.0);
+    iDesc.add<double>("w3", 0.62);
   }
 
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

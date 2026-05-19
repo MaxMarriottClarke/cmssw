@@ -47,7 +47,7 @@ void PatternRecognitionByCLUEstering::makeTracksters(
     // }
 
     clue::Clusterer<3> clusterer(queue, m_dc, m_rhoc, m_dm);
-    std::array<float, 3> weights{{1.f, 1., 2.f}};
+    std::array<float, 3> weights{{1.f, 1., 0.5549f}};
     clusterer.make_clusters(queue, d_points,
                             clue::metrics::WeightedChebyshev<3>(weights));
     // create hosts points and do the copy

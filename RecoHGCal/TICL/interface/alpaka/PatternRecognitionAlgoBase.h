@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "DataFormats/CaloRecHit/interface/alpaka/CaloClusterDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoAClusters.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoARecHitsHostCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoAClustersDeviceCollection.h"
@@ -20,7 +21,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     virtual ~PatternRecognitionAlgoBase() = default;
 
     virtual void makeTracksters(Queue& queue,
-                                const HGCalSoAClustersDeviceCollection& layerClusters,
+                                const reco::CaloClusterDeviceCollection& layerClusters,
                                 std::vector<ticl::Trackster>& result) = 0;
   };
 }  // namespace ALPAKA_ACCELERATOR_NAMESPACE

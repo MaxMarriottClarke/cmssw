@@ -18,6 +18,7 @@ from ..modules.hltHgcalSoARecHitsLayerClustersProducer_cfi import *
 from ..modules.hltHgcalSoALayerClustersProducer_cfi import *
 from ..modules.hltHgcalLayerClustersFromSoAProducer_cfi import *
 from ..modules.hltTiclTracksterLinks_cfi import *
+from ..modules.hltHeterogeneousTracksterProducer_cfi import *
 # Barrel layer clusters
 from ..modules.hltBarrelLayerClustersEB_cfi import *
 from ..modules.hltBarrelLayerClustersHB_cfi import *
@@ -46,7 +47,6 @@ _HgcalLocalRecoUnseededSequence_heterogeneous  = cms.Sequence(hltHgcalDigis+hltH
                                                hltHgcalLayerClustersHSi+
                                                hltMergeLayerClusters)
 
-
 _HgcalTICLPatternRecognitionUnseededSequence = cms.Sequence(hltFilteredLayerClustersCLUE3DHigh+
                                                             hltTiclSeedingGlobal+hltTiclLayerTileProducer+
                                                             hltTiclTrackstersCLUE3DHigh)
@@ -58,7 +58,7 @@ HLTHgcalTiclPFClusteringForEgammaUnseededSequence = cms.Sequence(_HgcalLocalReco
 
 # Alpaka
 from Configuration.ProcessModifiers.alpaka_cff import alpaka
-alpaka.toReplaceWith(_HgcalLocalRecoUnseededSequence, 
+alpaka.toReplaceWith(_HgcalLocalRecoUnseededSequence,
                      cms.Sequence(
                                   hltHgcalDigis
                                   + hltHGCalUncalibRecHit
@@ -70,15 +70,17 @@ alpaka.toReplaceWith(_HgcalLocalRecoUnseededSequence,
                                   + hltHgcalLayerClustersHSci
                                   + hltHgcalLayerClustersHSi
                                   + hltMergeLayerClusters
-                     ) 
+                     )
 )
 
+alpaka.toReplaceWith(_HgcalTICLPatternRecognitionUnseededSequence, cms.Sequence(hltHeterogeneousTracksterProducer))
+alpaka.toModify(hltParticleFlowClusterHGCalFromTICLUnseeded.initialClusteringStep, tracksterSrc = cms.InputTag("hltHeterogeneousTracksterProducer"))
 
 
 
 # Ticl mustache
 from Configuration.ProcessModifiers.ticl_superclustering_mustache_ticl_cff import ticl_superclustering_mustache_ticl
-ticl_superclustering_mustache_ticl.toReplaceWith(_SuperclusteringUnseededSequence, 
+ticl_superclustering_mustache_ticl.toReplaceWith(_SuperclusteringUnseededSequence,
                                                  cms.Sequence(
                                                               hltTiclTracksterLinksSuperclusteringMustacheUnseeded
                                                               + hltTiclEGammaSuperClusterProducerUnseeded

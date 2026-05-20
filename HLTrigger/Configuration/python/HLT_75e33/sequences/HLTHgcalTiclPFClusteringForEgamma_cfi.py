@@ -14,10 +14,34 @@ from ..modules.hltParticleFlowSuperClusterHGCal_cfi import *
 from ..modules.hltTiclLayerTileProducer_cfi import *
 from ..modules.hltTiclSeedingGlobal_cfi import *
 from ..modules.hltTiclTrackstersCLUE3DHigh_cfi import *
+from ..modules.hltHgcalSoARecHitsProducer_cfi import *
+from ..modules.hltHgcalSoARecHitsLayerClustersProducer_cfi import *
+from ..modules.hltHgcalSoALayerClustersProducer_cfi import *
+from ..modules.hltHgcalLayerClustersFromSoAProducer_cfi import *
+from ..modules.hltHeterogeneousTracksterProducer_cfi import hltHeterogeneousTracksterProducer
 # Barrel layer clusters
 from ..modules.hltBarrelLayerClustersEB_cfi import *
 from ..modules.hltBarrelLayerClustersHB_cfi import *
 HLTHgcalTiclPFClusteringForEgamma = cms.Sequence((hltHgcalDigis+hltHGCalUncalibRecHit+hltHGCalRecHit+hltParticleFlowRecHitHGC+hltHgcalLayerClustersEE+hltHgcalLayerClustersHSci+hltHgcalLayerClustersHSi+hltMergeLayerClusters+hltFilteredLayerClustersCLUE3DHigh+hltTiclSeedingGlobal+hltTiclLayerTileProducer+hltTiclTrackstersCLUE3DHigh+hltParticleFlowClusterHGCal+hltParticleFlowSuperClusterHGCal))
+
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+_HLTHgcalTiclPFClusteringForEgamma_alpaka = cms.Sequence(
+    hltHgcalDigis +
+    hltHGCalUncalibRecHit +
+    hltHGCalRecHit +
+    hltParticleFlowRecHitHGC +
+    hltHgcalSoARecHitsProducer +
+    hltHgcalSoARecHitsLayerClustersProducer +
+    hltHgcalSoALayerClustersProducer +
+    hltHgCalLayerClustersFromSoAProducer +
+    hltHgcalLayerClustersHSci +
+    hltHgcalLayerClustersHSi +
+    hltMergeLayerClusters +
+    hltHeterogeneousTracksterProducer +
+    hltParticleFlowClusterHGCal +
+    hltParticleFlowSuperClusterHGCal
+)
+alpaka.toReplaceWith(HLTHgcalTiclPFClusteringForEgamma, _HLTHgcalTiclPFClusteringForEgamma_alpaka)
 
 HLTHgcalTiclPFClusteringForEgamma_barrel = cms.Sequence((
   hltHgcalDigis+

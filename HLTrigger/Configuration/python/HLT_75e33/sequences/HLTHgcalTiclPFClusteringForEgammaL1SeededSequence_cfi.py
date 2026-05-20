@@ -15,11 +15,6 @@ from ..modules.hltParticleFlowClusterHGCalFromTICLL1Seeded_cfi import *
 from ..modules.hltParticleFlowRecHitHGCL1Seeded_cfi import *
 from ..modules.hltTiclLayerTileProducerL1Seeded_cfi import *
 from ..modules.hltTiclSeedingL1_cfi import *
-from ..modules.hltHgcalSoARecHitsProducer_cfi import *
-from ..modules.hltHgcalSoARecHitsLayerClustersProducer_cfi import *
-from ..modules.hltHgcalSoALayerClustersProducer_cfi import *
-from ..modules.hltHgcalLayerClustersFromSoAProducer_cfi import *
-
 from ..modules.hltTiclTrackstersCLUE3DHighL1Seeded_cfi import *
 from ..modules.hltTiclTracksterLinksL1Seeded_cfi import *
 from ..modules.hltBarrelLayerClustersEBL1Seeded_cfi import *
@@ -72,9 +67,10 @@ alpaka.toReplaceWith(_HgcalLocalRecoL1SeededSequence,
                                   + hltMergeLayerClustersL1Seeded
                      )
 )
-
 alpaka.toReplaceWith(_HgcalTICLPatternRecognitionL1SeededSequence, cms.Sequence(hltHeterogeneousTracksterProducerL1Seeded))
 alpaka.toModify(hltParticleFlowClusterHGCalFromTICLL1Seeded.initialClusteringStep, tracksterSrc = cms.InputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+
+
 
 
 

@@ -22,6 +22,7 @@ from ..modules.hltHgcalSoALayerClustersProducer_cfi import *
 from ..modules.hltHgcalLayerClustersFromSoAProducer_cfi import *
 from ..modules.hltTiclTrackstersCLUE3DHighL1Seeded_cfi import *
 from ..modules.hltTiclTracksterLinksL1Seeded_cfi import *
+from ..modules.hltHeterogeneousTracksterProducerL1Seeded_cfi import *
 from ..modules.hltBarrelLayerClustersEBL1Seeded_cfi import *
 _HgcalLocalRecoL1SeededSequence = cms.Sequence(hltHgcalDigis+
                                                hltL1TEGammaHGCFilteredCollectionProducer+
@@ -62,8 +63,11 @@ alpaka.toReplaceWith(_HgcalLocalRecoL1SeededSequence,
                                   + hltHgcalLayerClustersHSciL1Seeded
                                   + hltHgcalLayerClustersHSiL1Seeded
                                   + hltMergeLayerClustersL1Seeded 
-                     ) 
+                     )
 )
+alpaka.toReplaceWith(_HgcalTICLPatternRecognitionL1SeededSequence, cms.Sequence(hltHeterogeneousTracksterProducerL1Seeded))
+alpaka.toModify(hltParticleFlowClusterHGCalFromTICLL1Seeded.initialClusteringStep, tracksterSrc = cms.InputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+
 # Enable EGammaSuperClusterProducer at HLT in ticl v5
 hltTiclTracksterLinksSuperclusteringDNNL1Seeded = hltTiclTracksterLinksL1Seeded.clone(
     linkingPSet = cms.PSet(
@@ -89,6 +93,10 @@ hltTiclEGammaSuperClusterProducerL1Seeded = _ticlEGammaSuperClusterProducer.clon
     ticlTrackstersEM = "hltTiclTrackstersCLUE3DHighL1Seeded",
     layerClusters = "hltMergeLayerClustersL1Seeded"
 )
+
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringDNNL1Seeded, tracksters_collections = cms.VInputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringMustacheL1Seeded, tracksters_collections = cms.VInputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+alpaka.toModify(hltTiclEGammaSuperClusterProducerL1Seeded, ticlTrackstersEM = cms.InputTag("hltHeterogeneousTracksterProducerL1Seeded"))
 
 # DNN
 from Configuration.ProcessModifiers.ticl_superclustering_dnn_cff import ticl_superclustering_dnn

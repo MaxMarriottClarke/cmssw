@@ -1,5 +1,6 @@
 #include <alpaka/alpaka.hpp>
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
 #include "DataFormats/CaloRecHit/interface/alpaka/CaloClusterDeviceCollection.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoAClusters.h"
 #include "DataFormats/HGCalReco/interface/HGCalSoARecHitsHostCollection.h"
@@ -33,7 +34,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         : EDProducer(config),
           // detector_(config.getParameter<std::string>("detector")),
           // doNose_(detector_ == "HFNose"),
-          deviceTokenSoAClusters_{consumes(config.getParameter<edm::InputTag>("layerClusters"))},
+          hostTokenSoAClusters_{consumes<::reco::CaloClusterHostCollection>(config.getParameter<edm::InputTag>("layerClusters"))},
           legacyTrackstersToken_{produces()} {
       auto plugin = config.getParameter<std::string>("patternRecognitionBy");
       auto pluginPSet = config.getParameter<edm::ParameterSet>("pluginPatternRecognitionBy" + plugin);
@@ -59,18 +60,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
 
     void produce(device::Event& iEvent, device::EventSetup const& iSetup) override {
-      const auto& lc = iEvent.get(deviceTokenSoAClusters_);
-      auto tracksters = std::vector<ticl::Trackster>();
       auto& queue = iEvent.queue();
-      algo_->makeTracksters(queue, lc, tracksters);
-      std::cout << "n tracksters = " << tracksters.size() << std::endl;
+      const auto& hostLC = iEvent.get(hostTokenSoAClusters_);
+      auto nClusters = hostLC.view().position().metadata().size();
+      reco::CaloClusterDeviceCollection deviceLC(queue, nClusters, nClusters, nClusters, nClusters);
+      alpaka::memcpy(queue, deviceLC.buffer(), hostLC.buffer());
+      auto tracksters = std::vector<ticl::Trackster>();
+      algo_->makeTracksters(queue, deviceLC, tracksters);
       iEvent.emplace(legacyTrackstersToken_, std::move(tracksters));
     }
 
   private:
     // std::string detector_;
     // bool doNose_;
-    device::EDGetToken<reco::CaloClusterDeviceCollection> const deviceTokenSoAClusters_;
+    edm::EDGetTokenT<::reco::CaloClusterHostCollection> const hostTokenSoAClusters_;
     edm::EDPutTokenT<std::vector<ticl::Trackster>> const legacyTrackstersToken_;
     std::unique_ptr<PatternRecognitionAlgoBase> algo_;
     std::unique_ptr<PatternRecognitionAlgoBase> myAlgoHFNose_;

@@ -19,6 +19,7 @@ from ..modules.hltHgcalSoARecHitsLayerClustersProducer_cfi import *
 from ..modules.hltHgcalSoALayerClustersProducer_cfi import *
 from ..modules.hltHgcalLayerClustersFromSoAProducer_cfi import *
 from ..modules.hltTiclTracksterLinks_cfi import *
+from ..modules.hltHeterogeneousTracksterProducer_cfi import *
 # Barrel layer clusters
 from ..modules.hltBarrelLayerClustersEB_cfi import *
 from ..modules.hltBarrelLayerClustersHB_cfi import *
@@ -65,8 +66,10 @@ alpaka.toReplaceWith(_HgcalLocalRecoUnseededSequence,
                                   + hltHgcalLayerClustersHSci
                                   + hltHgcalLayerClustersHSi
                                   + hltMergeLayerClusters
-                     ) 
+                     )
 )
+alpaka.toReplaceWith(_HgcalTICLPatternRecognitionUnseededSequence, cms.Sequence(hltHeterogeneousTracksterProducer))
+alpaka.toModify(hltParticleFlowClusterHGCalFromTICLUnseeded.initialClusteringStep, tracksterSrc = cms.InputTag("hltHeterogeneousTracksterProducer"))
 
 # Use EGammaSuperClusterProducer at HLT in ticl v5
 hltTiclTracksterLinksSuperclusteringDNNUnseeded = hltTiclTracksterLinks.clone(
@@ -93,6 +96,10 @@ hltTiclEGammaSuperClusterProducerUnseeded = _ticlEGammaSuperClusterProducer.clon
     ticlTrackstersEM = "hltTiclTrackstersCLUE3DHigh",
     layerClusters = "hltMergeLayerClusters"
 )
+
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringDNNUnseeded, tracksters_collections = cms.VInputTag("hltHeterogeneousTracksterProducer"))
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringMustacheUnseeded, tracksters_collections = cms.VInputTag("hltHeterogeneousTracksterProducer"))
+alpaka.toModify(hltTiclEGammaSuperClusterProducerUnseeded, ticlTrackstersEM = cms.InputTag("hltHeterogeneousTracksterProducer"))
 
 # DNN
 from Configuration.ProcessModifiers.ticl_superclustering_dnn_cff import ticl_superclustering_dnn

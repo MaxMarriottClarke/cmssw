@@ -49,6 +49,6 @@
   <use name="Geometry/HGCalGeometry"/>
   <use name="HeterogeneousCore/AlpakaCore"/>
   <use name="HeterogeneousCore/AlpakaInterface"/>
-  <flags ALPAKA_BACKENDS="serial"/>
+  <flags ALPAKA_BACKENDS="cuda serial"/>
   <flags EDM_PLUGIN="1"/>
 </library>

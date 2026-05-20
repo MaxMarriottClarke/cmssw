@@ -22,6 +22,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                           const float outlierDeltaFactor,
                                           const HGCalSoARecHitsDeviceCollection::ConstView inputs,
                                           HGCalSoARecHitsExtraDeviceCollection::View outputs) const {
+    // Launching a CUDA kernel with 0 blocks is invalid (cudaErrorInvalidConfiguration).
+    if (size == 0)
+      return;
     CLUEAlgoAlpaka<ALPAKA_ACCELERATOR_NAMESPACE::Acc1D, Queue, HGCalSiliconTilesConstants, kHGCalLayers> algoStandalone(
         queue, dc, kappa, outlierDeltaFactor, false);
 

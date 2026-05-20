@@ -154,6 +154,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                              const HGCalSoARecHitsExtraDeviceCollection::ConstView input_clusters_soa,
                                              reco::CaloClusterDeviceCollection::View outputs,
                                              HGCalSoAClustersExtraDeviceCollection::View outputs_service) const {
+    // divide_up_by(0, items) == 0, which would launch a kernel with 0 groups (invalid).
+    if (size == 0)
+      return;
     auto x = cms::alpakatools::make_device_view<float>(queue, outputs.position().x());
     alpaka::memset(queue, x, 0x0);
     auto y = cms::alpakatools::make_device_view<float>(queue, outputs.position().y());

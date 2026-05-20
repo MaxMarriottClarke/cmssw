@@ -119,12 +119,9 @@ void HGCalCLUEAlgoT<T, STRATEGY>::makeClusters() {
       points.set_density_uncertainty(cells_[l].sigmaNoise);
       clusterer.make_clusters(points);
       numberOfClustersPerLayer_[l] = points.n_clusters();
-
-      std::cout << "layer = " << l << " nclusters = " << points.n_clusters() << std::endl;
-
       auto seeds = clusterer.getSeeds();
       std::ranges::copy(seeds, std::back_inserter(cells_[l].seeds));
-    }
+      }
   }
 #if DEBUG_CLUSTERS_ALPAKA
   hgcalUtils::DumpLegacySoA dumperLegacySoA;
@@ -151,7 +148,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
   // cellsIdInCluster.reserve(maxClustersOnLayer);
   const auto total_rechits = std::accumulate(
       cells_.begin(), cells_.end(), 0, [](auto acc, const auto &cell) { return acc + cell.dim1.size(); });
-  std::cout << "total clusters = " << totalNumberOfClusters << std::endl;
   ticl::LayerClustersAndAssociations clusters_and_associations(totalNumberOfClusters, total_rechits);
 
   std::vector<ticl::HitAndFraction> detid_and_fractions;
@@ -164,6 +160,7 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
     if (points.size() <= 0 || numberOfClustersPerLayer_[layerId] == 0)
       continue;
 
+    const auto hits_before = cluster_hit_associations.size();
     auto clustered = [](auto cluster_index) { return cluster_index != -1; };
     auto cluster_offsets = [&](auto cluster_index) {
       return (cluster_index == -1) ? -1 : cluster_index + offsets[layerId];
@@ -172,14 +169,12 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
                       std::back_inserter(cluster_hit_associations));
 
     auto clusters = clue::get_clusters(points);
-    // for (auto cl = 0u; cl < clusters.size(); ++cl) {
-    //   for (auto p : clusters[cl]) {
-    //     auto detid = cells_[layerId].detid[p];
-    //     detid_and_fractions.push_back(ticl::HitAndFraction{detid, -1.f});
-    //   }
-    // }
-    auto to_hit_and_fraction = [&](auto idx) { return ticl::HitAndFraction{cells_[layerId].detid[idx], -1.f}; };
-    std::ranges::copy(clusters | std::views::transform(to_hit_and_fraction), std::back_inserter(detid_and_fractions));
+    const auto detid_before = detid_and_fractions.size();
+    for (auto i = 0u; i < cells_[layerId].clusterIndex.size(); ++i) {
+      if (cells_[layerId].clusterIndex[i] >= 0) {
+        detid_and_fractions.push_back(ticl::HitAndFraction{cells_[layerId].detid[i], -1.f});
+      }
+    }
     actual_clusters += clusters.size();
     for (auto cl = 0u; cl < clusters.size(); ++cl) {
       const auto cluster = clusters[cl];
@@ -188,8 +183,13 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       const auto z = cells_[layerId].layerDim3;
       auto energy = std::reduce(
           cluster.begin(), cluster.end(), 0.f, [&](auto acc, auto idx) { return acc + points.weights()[idx]; });
-      auto max_energy_it = std::ranges::max_element(points.weights());
-      const auto max_energy_idx = std::distance(points.weights().begin(), max_energy_it);
+
+      auto max_energy_idx = cluster[0];
+      for (auto p : cluster) {
+          if (points.weights()[p] > points.weights()[max_energy_idx])
+              max_energy_idx = p;
+      }
+
       const auto max_energy_detid = cells_[layerId].detid[max_energy_idx];
 
       if constexpr (std::is_same_v<STRATEGY, HGCalSiliconStrategy>) {
@@ -238,7 +238,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       layer_clusters_view.indexes().flags()[globalClusterIndex] = 0;
     }
   }
-
   auto new_hits_and_fractions = std::make_unique<ticl::HitsAndFractionsHost>(
       cms::alpakatools::host(), cluster_hit_associations.size(), totalNumberOfClusters);
   clusters_and_associations.hits_and_fractions = std::move(new_hits_and_fractions);

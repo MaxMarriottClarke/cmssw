@@ -21,6 +21,7 @@ from ..modules.hltHgcalSoALayerClustersProducer_cfi import *
 from ..modules.hltHgcalLayerClustersFromSoAProducer_cfi import *
 from ..modules.hltTiclTrackstersCLUE3DHighL1Seeded_cfi import *
 from ..modules.hltTiclTracksterLinksL1Seeded_cfi import *
+from ..modules.hltHeterogeneousTracksterProducerL1Seeded_cfi import *
 from ..modules.hltBarrelLayerClustersEBL1Seeded_cfi import *
 from ..modules.hltTiclEGammaSuperClusterProducerL1Seeded_cfi import hltTiclEGammaSuperClusterProducerL1Seeded
 from ..modules.hltTiclTracksterLinksSuperclusteringMustacheL1Seeded_cfi import hltTiclTracksterLinksSuperclusteringMustacheL1Seeded
@@ -71,6 +72,9 @@ alpaka.toReplaceWith(_HgcalLocalRecoL1SeededSequence,
                                   + hltMergeLayerClustersL1Seeded
                      )
 )
+alpaka.toReplaceWith(_HgcalTICLPatternRecognitionL1SeededSequence, cms.Sequence(hltHeterogeneousTracksterProducerL1Seeded))
+alpaka.toModify(hltParticleFlowClusterHGCalFromTICLL1Seeded.initialClusteringStep, tracksterSrc = cms.InputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+
 # Enable EGammaSuperClusterProducer at HLT in ticl v5
 hltTiclTracksterLinksSuperclusteringDNNL1Seeded = hltTiclTracksterLinksL1Seeded.clone(
     linkingPSet = cms.PSet(
@@ -81,11 +85,22 @@ hltTiclTracksterLinksSuperclusteringDNNL1Seeded = hltTiclTracksterLinksL1Seeded.
     ),
     tracksters_collections = [cms.InputTag("hltTiclTrackstersCLUE3DHighL1Seeded")], # to be changed to ticlTrackstersCLUE3DEM once separate CLUE3D iterations are introduced
 )
->>>>>>> 739e7902631 (modify HLT config files for correct layer clusters inputs)
 
 
 
 
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringDNNL1Seeded, tracksters_collections = cms.VInputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringMustacheL1Seeded, tracksters_collections = cms.VInputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+alpaka.toModify(hltTiclEGammaSuperClusterProducerL1Seeded, ticlTrackstersEM = cms.InputTag("hltHeterogeneousTracksterProducerL1Seeded"))
+
+# DNN
+from Configuration.ProcessModifiers.ticl_superclustering_dnn_cff import ticl_superclustering_dnn
+ticl_superclustering_dnn.toReplaceWith(_SuperclusteringL1SeededSequence,
+                                       cms.Sequence(
+                                                    hltTiclTracksterLinksSuperclusteringDNNL1Seeded
+                                                    + hltTiclEGammaSuperClusterProducerL1Seeded
+                                       )
+)
 
 # Mustache
 from Configuration.ProcessModifiers.ticl_superclustering_mustache_ticl_cff import ticl_superclustering_mustache_ticl

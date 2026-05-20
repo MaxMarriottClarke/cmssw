@@ -51,10 +51,8 @@ namespace ticl::associator::detail {
     using namespace ::cms::alpakatools;
 
     const auto nkeys = map.metadata().size()[1];
-    std::cout << "nkeys from fill = " << nkeys << std::endl;
     // const auto nvalues = map.metadata().size()[0];
     const auto nvalues = values.size();
-    std::cout << "nvals from fill = " << nvalues << std::endl;
 
     const auto blocksize = 1024;
     const auto gridsize = divide_up_by(keys.size(), blocksize);

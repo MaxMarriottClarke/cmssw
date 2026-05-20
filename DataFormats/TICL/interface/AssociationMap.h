@@ -27,15 +27,15 @@ namespace ticl {
                         SOA_BLOCK(offsets, OffsetBufferLayout),
                         SOA_VIEW_METHODS(
 							constexpr SOA_HOST_DEVICE auto operator[](TKey key) {
-							auto offset = (key == 0u) ? 0u : this->offsets()[key].keys_offsets();
-							auto size = (key == 0u) ? this->offsets()[0].keys_offsets() 
+							auto offset = (key == 0u) ? 0u : this->offsets()[key - 1].keys_offsets();
+							auto size = (key == 0u) ? this->offsets()[0].keys_offsets()
                                         : this->offsets()[key].keys_offsets() - this->offsets()[key - 1].keys_offsets();
 							return std::span<TMapped>{this->content().values().data() + offset, static_cast<std::size_t>(size)};
 							}
 						),
                         SOA_CONST_VIEW_METHODS(
 							constexpr SOA_HOST_DEVICE auto operator[](TKey key) const {
-							auto offset = (key == 0) ? 0u : this->offsets().keys_offsets()[key];
+							auto offset = (key == 0) ? 0u : this->offsets().keys_offsets()[key - 1];
 							auto size = (key == 0u) ? this->offsets()[0].keys_offsets()
                                         : this->offsets()[key].keys_offsets() - this->offsets()[key - 1].keys_offsets();
 							return std::span<const TMapped>{this->content().values().data() + offset, static_cast<std::size_t>(size)};

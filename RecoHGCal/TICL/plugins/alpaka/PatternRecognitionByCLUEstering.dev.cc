@@ -46,7 +46,7 @@ void PatternRecognitionByCLUEstering::makeTracksters(
     //   }
     // }
 
-    clue::Clusterer<3> clusterer(queue, m_dc, m_rhoc, m_dm);
+    clue::Clusterer<3> clusterer(queue, m_dc, m_rhoc, m_dm, m_ds > 0 ? std::make_optional(m_ds) : std::nullopt);
     std::array<float, 3> weights{{1.f, 1., 0.5549f}};
     clusterer.make_clusters(queue, d_points,
                             clue::metrics::WeightedChebyshev<3>(weights));
@@ -170,7 +170,8 @@ void PatternRecognitionByCLUEstering::fillPSetDescription(
   // iDesc.add<int>("algo_verbosity", 0);
   iDesc.add<double>("rho_c", 6.);
   iDesc.add<double>("dc", 2.);
-  iDesc.add<double>("dm", 1.8);
+  iDesc.add<double>("dm", 4.);
+  iDesc.add<double>("ds", 4.);
 }
 
 } // namespace ALPAKA_ACCELERATOR_NAMESPACE

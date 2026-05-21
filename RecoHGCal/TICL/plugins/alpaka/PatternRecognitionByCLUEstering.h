@@ -25,13 +25,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     float m_rhoc;
     float m_dc;
     float m_dm;
+    float m_ds;
 
   public:
     PatternRecognitionByCLUEstering(const edm::ParameterSet& config)
         : PatternRecognitionAlgoBase(config),
           m_rhoc(config.getParameter<double>("rho_c")),
           m_dc(config.getParameter<double>("dc")),
-          m_dm(config.getParameter<double>("dm")) {
+          m_dm(config.getParameter<double>("dm")),
+          m_ds(config.getParameter<double>("ds")) {
     }
     ~PatternRecognitionByCLUEstering() override = default;
 

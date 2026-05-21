@@ -67,6 +67,97 @@ def customiseTICLFromReco(process):
 
 def customiseTICLForDumper(process, histoName="histo.root"):
 
+    from RecoHGCal.TICL.HLTSimTracksters_cff import (
+        hltFilteredLayerClustersSimTracksters,
+        tpToHltGeneralTrackAssociation,
+        hltTiclSimTracksters,
+    )
+    from Validation.RecoTrack.associators_cff import (
+        hltTPClusterProducer,
+        hltTrackAssociatorByHits,
+    )
+    from SimGeneral.TrackingAnalysis.simHitTPAssociation_cfi import simHitTPAssocProducer
+
+    from Validation.Configuration.hltHGCalSimValid_cff import (
+        hltRecHitMapProducer,
+        hltLcAssocByEnergyScoreProducer,
+        hltScAssocByEnergyScoreProducer,
+        hltLayerClusterCaloParticleAssociationProducer,
+        hltLayerClusterSimClusterAssociationProducer,
+        SimClusterToCaloParticleAssociation,
+    )
+
+    from SimCalorimetry.HGCalAssociatorProducers.AllLayerClusterToTracksterAssociatorsProducer_cfi import AllLayerClusterToTracksterAssociatorsProducer as _AllLCtoTSProducer
+    from SimCalorimetry.HGCalAssociatorProducers.TSToSimTSAssociation_cfi import allTrackstersToSimTrackstersAssociationsByLCs as _allTStoSimTSAssoc
+
+    recoLabel = "hltHeterogeneousTracksterProducer"
+
+    hltAllLayerClusterToTracksterAssociations = _AllLCtoTSProducer.clone(
+        layer_clusters = cms.InputTag("hltHgCalLayerClustersFromSoAProducer"),
+        tracksterCollections = cms.VInputTag(
+            cms.InputTag(recoLabel),
+            cms.InputTag("hltTiclSimTracksters"),
+            cms.InputTag("hltTiclSimTracksters", "fromCPs"),
+        ),
+    )
+    hltAllTrackstersToSimTrackstersAssociationsByLCs = _allTStoSimTSAssoc.clone(
+        allLCtoTSAccoc = cms.string("hltAllLayerClusterToTracksterAssociations"),
+        layerClusters = cms.InputTag("hltHgCalLayerClustersFromSoAProducer"),
+        tracksterCollections = cms.VInputTag(cms.InputTag(recoLabel)),
+        simTracksterCollections = cms.VInputTag(
+            cms.InputTag("hltTiclSimTracksters"),
+            cms.InputTag("hltTiclSimTracksters", "fromCPs"),
+        ),
+    )
+
+    process.hltTPClusterProducer = hltTPClusterProducer
+    process.hltTrackAssociatorByHits = hltTrackAssociatorByHits
+    process.tpToHltGeneralTrackAssociation = tpToHltGeneralTrackAssociation
+    process.hltFilteredLayerClustersSimTracksters = hltFilteredLayerClustersSimTracksters
+    process.hltTiclSimTracksters = hltTiclSimTracksters
+    process.simHitTPAssocProducer = simHitTPAssocProducer
+    process.hltRecHitMapProducer = hltRecHitMapProducer
+    process.hltLcAssocByEnergyScoreProducer = hltLcAssocByEnergyScoreProducer
+    process.hltScAssocByEnergyScoreProducer = hltScAssocByEnergyScoreProducer
+    process.hltLayerClusterCaloParticleAssociationProducer = hltLayerClusterCaloParticleAssociationProducer.clone(
+        label_lc = cms.InputTag("hltHgCalLayerClustersFromSoAProducer")
+    )
+    process.hltLayerClusterSimClusterAssociationProducer = hltLayerClusterSimClusterAssociationProducer.clone(
+        label_lcl = cms.InputTag("hltHgCalLayerClustersFromSoAProducer")
+    )
+    process.SimClusterToCaloParticleAssociation = SimClusterToCaloParticleAssociation
+    process.hltAllLayerClusterToTracksterAssociations = hltAllLayerClusterToTracksterAssociations
+    process.hltAllTrackstersToSimTrackstersAssociationsByLCs = hltAllTrackstersToSimTrackstersAssociationsByLCs
+
+    process.hltTiclDumperSimAndAssocSeq = cms.Sequence(
+        process.simHitTPAssocProducer +
+        process.hltTPClusterProducer +
+        process.hltTrackAssociatorByHits +
+        process.tpToHltGeneralTrackAssociation +
+        process.hltRecHitMapProducer +
+        process.hltLcAssocByEnergyScoreProducer +
+        process.hltScAssocByEnergyScoreProducer +
+        process.SimClusterToCaloParticleAssociation +
+        process.hltLayerClusterCaloParticleAssociationProducer +
+        process.hltLayerClusterSimClusterAssociationProducer +
+        process.hltFilteredLayerClustersSimTracksters +
+        process.hltTiclSimTracksters +
+        process.hltAllLayerClusterToTracksterAssociations +
+        process.hltAllTrackstersToSimTrackstersAssociationsByLCs
+    )
+
+    process.ticlDumperProducers = cms.Path(
+        process.hltHgcalDigis +
+        process.HLTTICLLocalRecoSequence +
+        process.HLTTiclTrackstersCLUE3DHighStepSequence +
+        process.hltTiclDumperSimAndAssocSeq
+    )
+
+    process.schedule.insert(
+        list(process.schedule).index(process.endjob_step),
+        process.ticlDumperProducers
+    )
+
     process.ticlDumper = ticlDumper.clone()
 
     process.TFileService = cms.Service("TFileService",

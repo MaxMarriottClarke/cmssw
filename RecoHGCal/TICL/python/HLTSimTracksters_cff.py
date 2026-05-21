@@ -8,7 +8,7 @@ from SimGeneral.TrackingAnalysis.simHitTPAssociation_cfi import simHitTPAssocPro
 # CA - PATTERN RECOGNITION
 
 hltFilteredLayerClustersSimTracksters = _filteredLayerClustersProducer.clone(
-    LayerClusters = cms.InputTag("hltMergeLayerClusters"),
+    LayerClusters = cms.InputTag("hltHgCalLayerClustersFromSoAProducer"),
     LayerClustersInputMask = cms.InputTag("hltMergeLayerClusters","InitialLayerClustersMask"),
     clusterFilter = "ClusterFilterByAlgoAndSize",
     min_cluster_size = 0, # inclusive
@@ -24,7 +24,7 @@ hltTiclSimTracksters = _simTrackstersProducer.clone(
     layerClusterSimClusterAssociator = cms.InputTag("hltLayerClusterSimClusterAssociationProducer"),
     filtered_mask = cms.InputTag("hltFilteredLayerClustersSimTracksters","hltTiclSimTracksters"),
     layer_clusters = cms.InputTag("hltMergeLayerClusters"),
-    time_layerclusters = cms.InputTag("hltMergeLayerClusters","timeLayerCluster"),
+    time_layerclusters = cms.InputTag("hltHgCalLayerClustersFromSoAProducer","timeLayerCluster"),
     simTrackToTPMap = cms.InputTag("simHitTPAssocProducer","simTrackToTP"),
     recoTracks = cms.InputTag("hltGeneralTracks"),
     simclusters = cms.InputTag("mix","MergedCaloTruth"),

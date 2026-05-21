@@ -5,10 +5,11 @@ from Configuration.ProcessModifiers.ticl_superclustering_mustache_pf_cff import 
 from Configuration.ProcessModifiers.ticl_superclustering_mustache_ticl_cff import ticl_superclustering_mustache_ticl
 
 
-from RecoHGCal.TICL.iterativeTICL_cff import ticlIterLabelsPSet, associatorsInstances
+from RecoHGCal.TICL.iterativeTICL_cff import associatorsInstances
+>>>>>>> 4e59700bd8f (Fix: ticldumper was crashing, there was an issue converting from new soa)
 
-
-simTrackstersCollections = ["ticlSimTracksters", "ticlSimTrackstersfromCPs"]
+ticlIterLabels = ["hltHeterogeneousTracksterProducer"]
+simTrackstersCollections = ["hltTiclSimTracksters", "hltTiclSimTrackstersfromCPs"]
 dumperAssociators = []
 
 for simTrackstersCollection in simTrackstersCollections:
@@ -18,8 +19,8 @@ for simTrackstersCollection in simTrackstersCollections:
             cms.PSet(
                 branchName=cms.string(tracksterIteration),
                 suffix=cms.string(suffix),
-                associatorRecoToSimInputTag=cms.InputTag(f"allTrackstersToSimTrackstersAssociationsByLCs:{tracksterIteration}To{simTrackstersCollection}"),
-                associatorSimToRecoInputTag=cms.InputTag(f"allTrackstersToSimTrackstersAssociationsByLCs:{simTrackstersCollection}To{tracksterIteration}")
+                associatorRecoToSimInputTag=cms.InputTag(f"hltAllTrackstersToSimTrackstersAssociationsByLCs:{tracksterIteration}To{simTrackstersCollection}"),
+                associatorSimToRecoInputTag=cms.InputTag(f"hltAllTrackstersToSimTrackstersAssociationsByLCs:{simTrackstersCollection}To{tracksterIteration}")
             )
         )
 
@@ -28,19 +29,34 @@ ticlDumper = ticlDumper_.clone(
     tracksterCollections = [*[cms.PSet(treeName=cms.string(label), inputTag=cms.InputTag(label)) for label in ticlIterLabelsPSet.labels],
         cms.PSet(
             treeName=cms.string("simtrackstersSC"),
-            inputTag=cms.InputTag("ticlSimTracksters"),
+            inputTag=cms.InputTag("hltTiclSimTracksters"),
             tracksterType=cms.string("SimTracksterSC")
         ),
         cms.PSet(
             treeName=cms.string("simtrackstersCP"),
-            inputTag=cms.InputTag("ticlSimTracksters", "fromCPs"),
+            inputTag=cms.InputTag("hltTiclSimTracksters", "fromCPs"),
             tracksterType=cms.string("SimTracksterCP")
         ),
     ],
 
     associators=dumperAssociators.copy(),
-    saveSuperclustering = cms.bool(True)
+
+    layerClusters = cms.InputTag('hltHgCalLayerClustersFromSoAProducer'),
+    layer_clustersTime = cms.InputTag('hltHgCalLayerClustersFromSoAProducer', 'timeLayerCluster'),
+    tracks = cms.InputTag('hltGeneralTracks'),
+    saveLCs = cms.bool(False),
+    saveTICLCandidate = cms.bool(False),
+    saveSimTICLCandidate = cms.bool(False),
+    saveTracks = cms.bool(False),
+    saveSuperclustering = cms.bool(False),
+    saveRecoSuperclusters = cms.bool(False),
+    saveHits = cms.bool(False),
 )
 
-
-ticl_superclustering_mustache_pf.toModify(ticlDumper, saveSuperclustering=False, recoSuperClusters_sourceTracksterCollection=cms.InputTag("ticlTrackstersCLUE3DHigh"))
+#ticl_v5.toModify(ticlDumper,
+#                 ticlcandidates = cms.InputTag("ticlCandidate"),
+#                 recoSuperClusters_sourceTracksterCollection=cms.InputTag("ticlTrackstersCLUE3DHigh"),
+#                 saveSuperclustering = cms.bool(True),
+#                 trackstersInCand=cms.InputTag("ticlCandidate"))
+#
+(ticl_v5 & ticl_superclustering_mustache_pf).toModify(ticlDumper, saveSuperclustering=False, recoSuperClusters_sourceTracksterCollection=cms.InputTag("ticlTrackstersCLUE3DHigh"))

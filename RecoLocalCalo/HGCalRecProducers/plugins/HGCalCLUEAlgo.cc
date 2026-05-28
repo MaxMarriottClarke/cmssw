@@ -1,5 +1,5 @@
+
 #include "RecoLocalCalo/HGCalRecProducers/plugins/HGCalCLUEAlgo.h"
-#include "FWCore/Utilities/interface/Exception.h"
 
 // Geometry
 #include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
@@ -193,7 +193,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
       const auto max_energy_detid = cells_[layerId].detid[max_energy_idx];
 
       if constexpr (std::is_same_v<STRATEGY, HGCalSiliconStrategy>) {
-
         auto thick = rhtools_.getSiThickIndex(max_energy_detid);
         auto total_weight_log = 0.f;
         for (auto p : cluster) {
@@ -203,7 +202,6 @@ ticl::LayerClustersAndAssociations HGCalCLUEAlgoT<T, STRATEGY>::getClusters(bool
             auto Wi = std::max(thresholdW0_[thick] + std::log(points.weights()[p] / energy), 0.);
             x += points.coords(0)[p] * Wi;
             y += points.coords(1)[p] * Wi;
->>>>>>> 7b03afe81ee ([WIP] use `CLUEstering` for legacy layer clusters)
             total_weight_log += Wi;
           }
         }

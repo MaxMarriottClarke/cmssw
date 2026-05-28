@@ -198,8 +198,8 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
       continue;
     }
     const auto seed_id = clusters.indexes()[idx].seedID();
-    int layer = rhtools_.getLayerWithOffset(seed_id) - 1 +
-                rhtools_.lastLayer(false) * ((rhtools_.zside(seed_id) + 1) >> 1);
+    int layer = rhtools->getLayerWithOffset(seed_id) - 1 +
+                rhtools->lastLayer(false) * ((rhtools->zside(seed_id) + 1) >> 1);
     assert(layer >= 0);
     const auto detId = seed_id;
     int layerClusterIndexInLayer = clusters_[layer].x.size();
@@ -267,7 +267,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
     clusters_[layer].phi.emplace_back(clusters.phi(idx));
     clusters_[layer].cells.push_back(clusters.position()[idx].cells());
     clusters_[layer].algoId.push_back(clusters.indexes()[idx].algoID() - reco::CaloCluster::hgcal_em);
-    clusters_[layer].isSilicon.push_back(rhtools_.isSilicon(detId));
+    clusters_[layer].isSilicon.push_back(rhtools->isSilicon(detId));
     clusters_[layer].energy.emplace_back(clusters.energy()[idx].energy());
     clusters_[layer].isSeed.push_back(false);
     clusters_[layer].clusterIndex.emplace_back(-1);
@@ -339,8 +339,8 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
 
   ticl::assignPCAtoTracksters(result,
                               input.layerClusters,
-                              rhtools_.getPositionLayer(rhtools_.lastLayerEE(false), false).z(),
-                              rhtools_,
+                              rhtools->getPositionLayer(rhtools->lastLayerEE(false), false).z(),
+                              *rhtools,
                               computeLocalTime_,
                               true,  // energy weighting
                               usePCACleaning_);

@@ -22,7 +22,7 @@ namespace ticl {
                              const reco::CaloClusterHostCollection &layerClusters,
                              double z_limit_em,
                              hgcal::RecHitTools const &rhTools,
-                             bool computeLocalTime = true,
+                             bool computeLocalTime = false,
                              bool energyWeight = true,
                              bool clean = false,
                              int minLayer = 10,
@@ -35,8 +35,9 @@ namespace ticl {
                                                const reco::CaloClusterHostCollection::ConstView &layerClusters,
                                                size_t N);
 
-  inline unsigned getLayerFromLC(const reco::CaloClusterHostCollection::ConstView &LC, const hgcal::RecHitTools &rhtools) {
-    return rhtools.getLayerWithOffset(LC.hitsAndFractions()[0].first);
+  inline unsigned getLayerFromLC(const reco::CaloClusterHostCollection::ConstView &clusters, const hgcal::RecHitTools &rhtools) {
+    auto layer = rhtools.getLayerWithOffset(clusters.indexes()[0].seedID());
+    return layer;
   }
 
   // Sort the layer clusters in the given trackster in bins of layer. Returns : vector[index=layer, value=vector[LC index]]]

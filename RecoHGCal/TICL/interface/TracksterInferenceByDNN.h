@@ -15,7 +15,6 @@ namespace ticl {
 
   class TracksterInferenceByDNN final : public TracksterInferenceAlgoBase {
   public:
-<<<<<<< HEAD
     explicit TracksterInferenceByDNN(const edm::ParameterSet& conf, TICLONNXGlobalCache const* cache);
 
     void runInference(const reco::CaloClusterHostCollection& layerClusters,

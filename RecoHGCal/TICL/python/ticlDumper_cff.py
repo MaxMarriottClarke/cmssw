@@ -6,7 +6,6 @@ from Configuration.ProcessModifiers.ticl_superclustering_mustache_ticl_cff impor
 
 
 from RecoHGCal.TICL.iterativeTICL_cff import associatorsInstances
->>>>>>> 4e59700bd8f (Fix: ticldumper was crashing, there was an issue converting from new soa)
 
 ticlIterLabels = ["hltHeterogeneousTracksterProducer"]
 simTrackstersCollections = ["hltTiclSimTracksters", "hltTiclSimTrackstersfromCPs"]

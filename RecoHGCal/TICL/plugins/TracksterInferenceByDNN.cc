@@ -37,17 +37,24 @@ namespace ticl {
     enabled_ = ((doPID_ != 0 && onnxPIDSession_ != nullptr) || (doRegression_ != 0 && onnxEnergySession_ != nullptr));
   }
 
-  void TracksterInferenceByDNN::inputData(const reco::CaloClusterHostCollection& layerClusters,
-                                          std::vector<Trackster>& tracksters,
-                                          const hgcal::RecHitTools& rhtools) {
+  void TracksterInferenceByDNN::runInference(const reco::CaloClusterHostCollection& layerClusters,
+                                             std::vector<Trackster>& tracksters,
+                                             const hgcal::RecHitTools& rhtools) const {
+    if (!enabled_ || tracksters.empty()) {
+      return;
+    }
+
     auto clusters = layerClusters.view();
-    tracksterIndices_.clear();  // Clear previous indices
+
+    std::vector<int> indices;
+    indices.reserve(tracksters.size());
+
     for (int i = 0; i < static_cast<int>(tracksters.size()); i++) {
-      float sumClusterEnergy = 0.;
+      float sumClusterEnergy = 0.f;
       for (const unsigned int& vertex : tracksters[i].vertices()) {
         if (rhtools.isBarrel(clusters.indexes()[vertex].seedID()))
           continue;
-        sumClusterEnergy += static_cast<float>(clusters.energy()[vertex].energy());
+        sumClusterEnergy += clusters.energy()[vertex].energy();
         if (sumClusterEnergy >= eidMinClusterEnergy_) {
           tracksters[i].setRegressedEnergy(0.f);
           tracksters[i].zeroProbabilities();
@@ -64,13 +71,11 @@ namespace ticl {
 
     const int mb = std::max(1, miniBatchSize_);
 
-    // Scratch buffers are local to this event.
-    OrtScratch ortScratch;
+    TracksterInferenceAlgoBase::OrtScratch ortScratch;
     ortScratch.inputs.resize(1);
     ortScratch.input_shapes.resize(1);
     ortScratch.clearPerEvent();
 
-    // Reused within the event to avoid minibatch-level churn.
     std::vector<int> seenClusters(eidNLayers_);
     std::vector<int> clusterIndices;
 
@@ -92,17 +97,17 @@ namespace ticl {
         clusterIndices.resize(vtxCount);
         std::iota(clusterIndices.begin(), clusterIndices.end(), 0);
 
-        std::sort(clusterIndices.begin(), clusterIndices.end(), [&layerClusters, &ts](int a, int b) {
-          return layerClusters[ts.vertices(a)].energy() > layerClusters[ts.vertices(b)].energy();
+        std::sort(clusterIndices.begin(), clusterIndices.end(), [&clusters, &ts](int a, int b) {
+          return clusters.energy()[ts.vertices(a)].energy() > clusters.energy()[ts.vertices(b)].energy();
         });
 
         std::fill(seenClusters.begin(), seenClusters.end(), 0);
 
         for (int k : clusterIndices) {
           const unsigned int v = ts.vertices(k);
-          auto const& cl = layerClusters[v];
+          auto const& cl = clusters.indexes()[v];
 
-          const int j = rhtools.getLayerWithOffset(cl.hitsAndFractions()[0].first) - 1;
+          const int j = rhtools.getLayerWithOffset(cl.seedID()) - 1;
           if (j < 0 || j >= eidNLayers_) {
             continue;
           }
@@ -114,32 +119,41 @@ namespace ticl {
               (static_cast<size_t>(bi) * eidNLayers_ + static_cast<size_t>(j)) * (eidNClusters_ * eidNFeatures_) +
               static_cast<size_t>(seenClusters[j]) * eidNFeatures_;
 
-          in[base + 0] = static_cast<float>(cl.energy() / static_cast<float>(ts.vertex_multiplicity(k)));
-          in[base + 1] = static_cast<float>(std::abs(cl.eta()));
-          in[base + 2] = static_cast<float>(cl.phi());
+          in[base + 0] = clusters.energy()[v].energy() / static_cast<float>(ts.vertex_multiplicity(k));
+          in[base + 1] = std::abs(clusters.eta(v));
+          in[base + 2] = clusters.phi(v);
 
           ++seenClusters[j];
         }
       }
 
-      std::sort(clusterIndices.begin(), clusterIndices.end(), [&clusters, &trackster](const int& a, const int& b) {
-        return clusters.energy()[trackster.vertices(a)].energy() > clusters.energy()[trackster.vertices(b)].energy();
-      });
-
+      if (doRegression_ != 0 && onnxEnergySession_ != nullptr) {
+        ortScratch.outputs.clear();
         onnxEnergySession_->runInto(
             inputNames_, ortScratch.inputs, ortScratch.input_shapes, output_en_, ortScratch.outputs, {}, n);
+        if (!ortScratch.outputs.empty() && !output_en_.empty()) {
+          auto const& energy = ortScratch.outputs[0];
+          for (int bi = 0; bi < n; ++bi) {
+            auto& ts = tracksters[indices[start + bi]];
+            const float regE = energy[bi];
+            const float finalE =
+                (ts.raw_energy() > eidMinClusterEnergy_) ? regE : static_cast<float>(ts.raw_energy());
+            ts.setRegressedEnergy(finalE);
+          }
+        }
+      }
 
-
-      // Fill input data with cluster information
-      for (const int& k : clusterIndices) {
-        int j = rhtools.getLayerWithOffset(clusters.indexes()[k].seedID()) - 1;
-        if (j < eidNLayers_ && seenClusters[j] < eidNClusters_) {
-          auto index = (i * eidNLayers_ + j) * eidNFeatures_ * eidNClusters_ + seenClusters[j] * eidNFeatures_;
-          input_Data_[0][index] =
-              static_cast<float>(clusters.energy()[k].energy() / static_cast<float>(trackster.vertex_multiplicity(k)));
-          input_Data_[0][index + 1] = static_cast<float>(std::abs(clusters.eta(k)));
-          input_Data_[0][index + 2] = static_cast<float>(clusters.phi(k));
-          seenClusters[j]++;
+      if (doPID_ != 0 && onnxPIDSession_ != nullptr) {
+        ortScratch.outputs.clear();
+        onnxPIDSession_->runInto(
+            inputNames_, ortScratch.inputs, ortScratch.input_shapes, output_id_, ortScratch.outputs, {}, n);
+        if (!ortScratch.outputs.empty() && !output_id_.empty()) {
+          float* probs = ortScratch.outputs[0].data();
+          for (int bi = 0; bi < n; ++bi) {
+            auto& ts = tracksters[indices[start + bi]];
+            ts.setProbabilities(probs);
+            probs += ts.id_probabilities().size();
+          }
         }
       }
     }

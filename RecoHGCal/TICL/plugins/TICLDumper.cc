@@ -1633,8 +1633,6 @@ void TICLDumper::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
   //    ->setComment(
   //        "Trackster collection used to produce the reco::SuperCluster, used to provide a mapping back to the "
   //        "tracksters used in superclusters");
->>>>>>> 4e59700bd8f (Fix: ticldumper was crashing, there was an issue converting from new soa)
-
   //desc.add<edm::InputTag>("simtrackstersSC", edm::InputTag("ticlSimTracksters"))
   //    ->setComment("SimTrackster from CaloParticle collection to use for simTICLcandidates");
   //desc.add<edm::InputTag>("simTICLCandidates", edm::InputTag("ticlSimTracksters"));

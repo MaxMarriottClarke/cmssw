@@ -44,7 +44,7 @@ void PatternRecognitionbyRecovery<TILES>::makeTracksters(
 
   // Iterate over all layer clusters
   auto clusters = input.layerClusters.view();
-  for (unsigned int i = 0; i < input.layerClusters.size()[0]; ++i) {
+  for (auto i = 0; i < input.layerClusters.size()[0]; ++i) {
     if (input.mask[i] == 0.f) {
       continue;  // Skip masked clusters
     }

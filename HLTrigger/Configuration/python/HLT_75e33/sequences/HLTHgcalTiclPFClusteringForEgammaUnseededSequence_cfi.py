@@ -75,6 +75,9 @@ alpaka.toReplaceWith(_HgcalLocalRecoUnseededSequence,
 
 alpaka.toReplaceWith(_HgcalTICLPatternRecognitionUnseededSequence, cms.Sequence(hltHeterogeneousTracksterProducer))
 alpaka.toModify(hltParticleFlowClusterHGCalFromTICLUnseeded.initialClusteringStep, tracksterSrc = cms.InputTag("hltHeterogeneousTracksterProducer"))
+alpaka.toModify(hltTiclTracksterLinksSuperclusteringDNNUnseeded, tracksters_collections = [cms.InputTag("hltHeterogeneousTracksterProducer")])
+alpaka.toModify(hltTiclEGammaSuperClusterProducerUnseeded, ticlTrackstersEM = cms.InputTag("hltHeterogeneousTracksterProducer"))
+alpaka.toModify(hltTiclEGammaSuperClusterProducerUnseeded, layerClusters = cms.InputTag("hltHgCalLayerClustersFromSoAProducer"))
 
 
 

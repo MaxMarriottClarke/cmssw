@@ -186,6 +186,8 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
   std::vector<std::pair<int, int>> layerIdx2layerandSoa;  //used everywhere also to propagate cluster masking
 
   layerIdx2layerandSoa.reserve(input.layerClusters.size()[0]);
+  auto clusters = input.layerClusters.view();
+
   unsigned int layerIdx = 0;
   for (auto idx = 0; idx < input.layerClusters.size()[0]; ++idx) {
     if (input.mask[layerIdx] == 0.) {
@@ -196,7 +198,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
       layerIdx++;
       continue;
     }
-    const auto seed_id = cluesters.indexes()[idx].seedID();
+    const auto seed_id = clusters.indexes()[idx].seedID();
     int layer = rhtools->getLayerWithOffset(seed_id) - 1 +
                 rhtools->lastLayer(false) * ((rhtools->zside(seed_id) + 1) >> 1);
     assert(layer >= 0);
@@ -209,8 +211,8 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
     float sum_sqr_y = 0.;
 
     float ref_x = clusters.position()[idx].x();
-    float ref_y = cluesters.position()[idx].y();
-    float incClsize =  1. / cluester.position()[idx].cells();
+    float ref_y = clusters.position()[idx].y();
+    float incClsize =  1. / clusters.position()[idx].cells();
 
     // The variance of X for X uniform in circle of radius R is R^2/4,
     // therefore we multiply the sqrt(var) by 2 to have a rough estimate of the
@@ -229,7 +231,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
 
     // The case of single cell layer clusters has to be handled differently.
 
-    if (invClsize == 1.) {
+    if (incClsize == 1.) {
       // Silicon case
       if (rhtools->isSilicon(detId)) {
         radius_x = radius_y = rhtools->getRadiusToSide(detId);
@@ -260,7 +262,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
     clusters_[layer].phi.emplace_back(clusters.phi(idx));
     clusters_[layer].cells.push_back(clusters.position()[idx].cells());
     clusters_[layer].algoId.push_back(clusters.indexes()[idx].algoID() - reco::CaloCluster::hgcal_em);
-    clusters_[layer].isSilicon.push_back(rhtools_.isSilicon(detId));
+    clusters_[layer].isSilicon.push_back(rhtools->isSilicon(detId));
     clusters_[layer].energy.emplace_back(clusters.energy()[idx].energy());
     clusters_[layer].isSeed.push_back(false);
     clusters_[layer].clusterIndex.emplace_back(-1);

@@ -132,7 +132,7 @@ void PatternRecognitionbyFastJet<TILES>::makeTracksters(
                                     clusters.position()[clusterIdx].z());
 
           direction = direction.Unit();
-          direction *= clusters.energy()[clusteridx].energy();
+          direction *= clusters.energy()[clusterIdx].energy();
           auto fpj = fastjet::PseudoJet(direction.X(), direction.Y(), direction.Z(), clusters.energy()[clusterIdx].energy());
           fpj.set_user_index(clusterIdx);
           fjInputs.push_back(fpj);

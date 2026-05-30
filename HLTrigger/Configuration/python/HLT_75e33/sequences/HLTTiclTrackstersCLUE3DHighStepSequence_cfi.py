@@ -8,4 +8,4 @@ HLTTiclTrackstersCLUE3DHighStepSequence = cms.Sequence(hltFilteredLayerClustersC
 
 from Configuration.ProcessModifiers.alpaka_cff import alpaka
 from ..modules.hltHeterogeneousTracksterProducer_cfi import hltHeterogeneousTracksterProducer
-alpaka.toReplaceWith(HLTTiclTrackstersCLUE3DHighStepSequence, cms.Sequence(hltHeterogeneousTracksterProducer))
+alpaka.toReplaceWith(HLTTiclTrackstersCLUE3DHighStepSequence, cms.Sequence(hltTiclSeedingGlobal+hltHeterogeneousTracksterProducer))

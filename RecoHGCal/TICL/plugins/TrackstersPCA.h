@@ -49,7 +49,7 @@ namespace ticl {
     result.resize(rhtools.lastLayer() + 1);
 
     for (unsigned i = 0; i < N; ++i) {
-      const auto layer = getLayerFromLC(layerClusters, rhtools)
+      const auto layer = getLayerFromLC(layerClusters, rhtools);
       result[layer].push_back(i);
     }
     return result;

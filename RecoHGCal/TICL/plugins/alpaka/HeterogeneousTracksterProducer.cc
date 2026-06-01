@@ -35,7 +35,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // detector_(config.getParameter<std::string>("detector")),
           // doNose_(detector_ == "HFNose"),
           hostTokenSoAClusters_{consumes<::reco::CaloClusterHostCollection>(config.getParameter<edm::InputTag>("layerClusters"))},
-          legacyTrackstersToken_{produces()} {
+          legacyTrackstersToken_{produces()},
+          outputMaskToken_{produces()} {
       auto plugin = config.getParameter<std::string>("patternRecognitionBy");
       auto pluginPSet = config.getParameter<edm::ParameterSet>("pluginPatternRecognitionBy" + plugin);
       algo_ = PatternRecognitionFactoryAlpaka::get()->create(config.getParameter<std::string>("patternRecognitionBy"),
@@ -67,7 +68,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       alpaka::memcpy(queue, deviceLC.buffer(), hostLC.buffer());
       auto tracksters = std::vector<ticl::Trackster>();
       algo_->makeTracksters(queue, deviceLC, tracksters);
+
+      // Build the companion layer-cluster mask expected by downstream modules
+      auto output_mask = std::make_unique<std::vector<float>>(nClusters, 1.f);
+      for (auto const& trackster : tracksters) {
+        for (auto const v : trackster.vertices()) {
+          (*output_mask)[v] = 0.f;
+        }
+      }
+
       iEvent.emplace(legacyTrackstersToken_, std::move(tracksters));
+      iEvent.put(outputMaskToken_, std::move(output_mask));
     }
 
   private:
@@ -75,6 +86,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // bool doNose_;
     edm::EDGetTokenT<::reco::CaloClusterHostCollection> const hostTokenSoAClusters_;
     edm::EDPutTokenT<std::vector<ticl::Trackster>> const legacyTrackstersToken_;
+    edm::EDPutTokenT<std::vector<float>> const outputMaskToken_;
     std::unique_ptr<PatternRecognitionAlgoBase> algo_;
     std::unique_ptr<PatternRecognitionAlgoBase> myAlgoHFNose_;
   };

@@ -83,10 +83,10 @@ void TICLLayerTileProducer::produce(edm::Event &evt, const edm::EventSetup &) {
 
     const auto seed_detid = layerClusters.view().indexes()[lc_idx].seedID();
 
+    // layer() in CaloClusterHostCollection is already globally encoded as
+    // layerOnSide + ((zside+1)>>1)*maxlayer_, matching TileConstants::nLayers=100.
+    // Do NOT re-apply the z-side offset here.
     const auto isBarrelLC = rhtools_.isBarrel(seed_detid);
-    if (!isBarrelLC) {
-      layer += rhtools_.lastLayer(doNose_) * ((rhtools_.zside(seed_detid) + 1) >> 1) - 1;
-    }
 
     if (doNose_) {
       resultHFNose->fill(layer, layerClusters.view().eta(lc_idx), layerClusters.view().phi(lc_idx), lc_idx);

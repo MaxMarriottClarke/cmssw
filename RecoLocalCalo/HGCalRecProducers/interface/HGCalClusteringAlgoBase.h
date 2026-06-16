@@ -10,6 +10,7 @@
 #include "DataFormats/EgammaReco/interface/BasicCluster.h"
 
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
+#include "RecoLocalCalo/HGCalRecProducers/interface/LayerClusterAndAssociations.h"
 
 #include "CondFormats/DataRecord/interface/EcalPFRecHitThresholdsRcd.h"
 #include "CondFormats/EcalObjects/interface/EcalPFRecHitThresholds.h"
@@ -61,7 +62,11 @@ public:
   virtual void populate(const HGCRecHitCollection &hits) = 0;
   virtual void populate(const reco::PFRecHitCollection &hits) = 0;
   virtual void makeClusters() = 0;
-  virtual std::vector<reco::BasicCluster> getClusters(bool) = 0;
+
+  virtual ticl::LayerClustersAndAssociations getClusters(bool) = 0;
+  virtual std::vector<reco::BasicCluster> getClustersLegacy(bool) = 0;
+
+
   virtual void reset() = 0;
   virtual hgcal_clustering::Density getDensity() { return {}; };        //implementation is in some child class
   virtual void getEventSetupPerAlgorithm(const edm::EventSetup &es) {}  //implementation is in some child class

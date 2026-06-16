@@ -74,7 +74,6 @@ BarrelLayerClusterProducer::BarrelLayerClusterProducer(const edm::ParameterSet& 
   algo_ = HGCalLayerClusterAlgoFactory::get()->create(type, pluginPSet);
   setAlgoId(type);
 
-  algo_->setAlgoId(algoId_);
   algo_->setThresholds(consumesCollector().esConsumes<EcalPFRecHitThresholds, EcalPFRecHitThresholdsRcd>(),
                        consumesCollector().esConsumes<HcalPFCuts, HcalPFCutsRcd>());
 
@@ -130,7 +129,7 @@ void BarrelLayerClusterProducer::produce(edm::Event& evt, const edm::EventSetup&
   algo_->makeClusters();
 
   std::unique_ptr<std::vector<reco::CaloCluster>> clusters(new std::vector<reco::CaloCluster>);
-  *clusters = algo_->getClusters(false);
+  *clusters = algo_->getClustersLegacy(false);
   auto clusterHandle = evt.put(std::move(clusters));
 
   edm::PtrVector<reco::BasicCluster> clusterPtrs;  //, clusterPtrsSharing;

@@ -2,7 +2,7 @@
 #define RECOHGCAL_TICL_TRACKSTERSPCA_H
 
 #include "DataFormats/HGCalReco/interface/Trackster.h"
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
 #include <vector>
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
@@ -19,8 +19,7 @@ namespace ticl {
    * \param maxLayer Number of layers to consider for cleaned PCA after the most energetic LC
    */
   void assignPCAtoTracksters(std::vector<Trackster> &tracksters,
-                             const std::vector<reco::CaloCluster> &layerClusters,
-                             const edm::ValueMap<std::pair<float, float>> &layerClustersTime,
+                             const reco::CaloClusterHostCollection &layerClusters,
                              double z_limit_em,
                              hgcal::RecHitTools const &rhTools,
                              bool computeLocalTime = true,
@@ -30,21 +29,21 @@ namespace ticl {
                              int minLayer = 10,
                              int maxLayer = 10);
   std::pair<float, float> computeLocalTracksterTime(const Trackster &trackster,
-                                                    const std::vector<reco::CaloCluster> &layerClusters,
-                                                    const edm::ValueMap<std::pair<float, float>> &layerClustersTime,
+                                                    const reco::CaloClusterHostCollection::ConstView &layerClusters,
                                                     const Eigen::Vector3f &barycenter,
                                                     size_t N);
   std::pair<float, float> computeTracksterTime(const Trackster &trackster,
-                                               const edm::ValueMap<std::pair<float, float>> &layerClustersTime,
+                                               const reco::CaloClusterHostCollection::ConstView &layerClusters,
                                                size_t N);
 
-  inline unsigned getLayerFromLC(const reco::CaloCluster &LC, const hgcal::RecHitTools &rhtools) {
-    return rhtools.getLayerWithOffset(LC.hitsAndFractions()[0].first);
+  inline unsigned getLayerFromLC(const reco::CaloClusterHostCollection::ConstView &clusters, const hgcal::RecHitTools &rhtools) {
+    auto layer = rhtools.getLayerWithOffset(clusters.indexes()[0].seedID());
+    return layer;
   }
 
   // Sort the layer clusters in the given trackster in bins of layer. Returns : vector[index=layer, value=vector[LC index]]]
   inline std::vector<std::vector<unsigned>> sortByLayer(const Trackster &ts,
-                                                        const std::vector<reco::CaloCluster> &layerClusters,
+                                                        const reco::CaloClusterHostCollection::ConstView &layerClusters,
                                                         const hgcal::RecHitTools &rhtools) {
     size_t N = ts.vertices().size();
 
@@ -52,8 +51,7 @@ namespace ticl {
     result.resize(rhtools.lastLayer() + 1);
 
     for (unsigned i = 0; i < N; ++i) {
-      const auto &thisLC = layerClusters[ts.vertices(i)];
-      auto layer = getLayerFromLC(thisLC, rhtools);
+      const auto layer = getLayerFromLC(layerClusters, rhtools);
       result[layer].push_back(i);
     }
     return result;

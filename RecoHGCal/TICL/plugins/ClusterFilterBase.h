@@ -6,6 +6,7 @@
 
 #include "DataFormats/HGCalReco/interface/Common.h"
 #include "DataFormats/CaloRecHit/interface/CaloClusterFwd.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
 #include <memory>
@@ -20,7 +21,7 @@ namespace ticl {
     explicit ClusterFilterBase(const edm::ParameterSet&) {}
     virtual ~ClusterFilterBase() {}
 
-    virtual void filter(const std::vector<reco::CaloCluster>& layerClusters,
+    virtual void filter(const reco::CaloClusterHostCollection& layerClusters,
                         std::vector<float>& layerClustersMask,
                         hgcal::RecHitTools& rhtools) const = 0;
   };

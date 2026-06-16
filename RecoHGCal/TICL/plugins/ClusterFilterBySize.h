@@ -4,7 +4,7 @@
 #ifndef RecoHGCal_TICL_ClusterFilterBySize_H__
 #define RecoHGCal_TICL_ClusterFilterBySize_H__
 
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
 #include "ClusterFilterBase.h"
 
 #include <memory>
@@ -18,11 +18,14 @@ namespace ticl {
         : ClusterFilterBase(ps), max_cluster_size_(ps.getParameter<int>("max_cluster_size")) {}
     ~ClusterFilterBySize() override {}
 
-    void filter(const std::vector<reco::CaloCluster>& layerClusters,
+    void filter(const reco::CaloClusterHostCollection& layerClusters,
                 std::vector<float>& layerClustersMask,
                 hgcal::RecHitTools& rhtools) const override {
-      for (size_t i = 0; i < layerClusters.size(); i++) {
-        if (layerClusters[i].hitsAndFractions().size() > max_cluster_size_) {
+
+      auto clusters = layerClusters.view();
+      for (size_t i = 0; i < static_cast<size_t>(layerClusters.size()[0]); i++) {
+        const unsigned int nCells = clusters.position()[i].cells();
+        if (nCells > max_cluster_size_) {
           layerClustersMask[i] = 0.;
         }
       }

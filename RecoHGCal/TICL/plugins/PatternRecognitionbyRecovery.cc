@@ -40,38 +40,33 @@ void PatternRecognitionbyRecovery<TILES>::makeTracksters(
   // Clear the result vector
   result.clear();
 
-  result.reserve(input.layerClusters.size() / 16);  // Heuristic
+  result.reserve(input.layerClusters.size()[0] / 16);  // Heuristic
 
   // Iterate over all layer clusters
-  for (unsigned int i = 0; i < input.layerClusters.size(); ++i) {
+  auto clusters = input.layerClusters.view();
+  for (auto i = 0; i < input.layerClusters.size()[0]; ++i) {
     if (input.mask[i] == 0.f) {
       continue;  // Skip masked clusters
     }
     // Create a new trackster for each layer cluster
     result.emplace_back();
     auto &trackster = result.back();
-    auto &v = trackster.vertices();
-    v.clear();
-    v.reserve(1);
-    v.push_back(i);
 
-    auto &mult = trackster.vertex_multiplicity();
-    mult.clear();
-    mult.reserve(1);
-    mult.push_back(1);
-    const auto &lc = input.layerClusters[i];
-    const auto timePair = input.layerClustersTime.get(i);
-    trackster.setTimeAndError(timePair.first, timePair.second);
-    trackster.setRawEnergy(lc.energy());
-    trackster.setBarycenter({float(lc.x()), float(lc.y()), float(lc.z())});
+    trackster.vertices().push_back(i);
+    trackster.vertex_multiplicity().push_back(1);
+    trackster.setTimeAndError(clusters.timing()[i].time(), clusters.timing()[i].timeError());
+    trackster.setRawEnergy(clusters.energy()[i].energy());
+    trackster.setBarycenter(
+        {float(clusters.position()[i].x()), float(clusters.position()[i].y()), float(clusters.position()[i].z())});
     trackster.calculateRawPt();
-    const float z = lc.z();
-    if (z <= z_limit_em_ && z >= -z_limit_em_) {
-      trackster.setRawEmEnergy(lc.energy());
+
+    if (std::abs(clusters.position()[i].z()) <= z_limit_em_) {
+      trackster.setRawEmEnergy(clusters.energy()[i].energy());
       trackster.calculateRawEmPt();
     }
+
   }
-  result.shrink_to_fit();
+
   // Log the number of tracksters created
   if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
     edm::LogVerbatim("PatternRecognitionbyRecovery") << "Created " << result.size() << " tracksters";

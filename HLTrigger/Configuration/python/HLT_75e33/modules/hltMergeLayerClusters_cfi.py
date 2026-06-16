@@ -26,11 +26,19 @@ hltMergeLayerClustersSerialSync = cms.EDProducer("MergeClusterProducer",
 # Process modifiers: ticl_barrel and alpaka
 from Configuration.ProcessModifiers.alpaka_cff import alpaka
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
-
+"""
 (alpaka & ~ticl_barrel).toModify(hltMergeLayerClusters,
     layerClusters = ["hltHgCalLayerClustersFromSoAProducer", *ceh_layerClusters],
     time_layerclusters = ["hltHgCalLayerClustersFromSoAProducer:timeLayerCluster", *ceh_time_layerClusters]
 )
+
+"""
+(alpaka & ~ticl_barrel).toModify(hltMergeLayerClusters,
+    # layerClusters = ["hltHgcalSoALayerClustersProducer", *ceh_layerClusters],
+    layerClusters = ["hltHgcalSoALayerClustersProducer"],
+    time_layerclusters = ["hltHgcalSoALayerClustersProducer:timeLayerCluster", *ceh_time_layerClusters]
+)
+
 
 (ticl_barrel & ~alpaka).toModify(hltMergeLayerClusters,
     layerClusters = ["hltHgcalLayerClustersEE", *ceh_layerClusters, *barrel_layerClusters],

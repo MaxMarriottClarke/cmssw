@@ -4,12 +4,10 @@
 #include "RecoHGCal/TICL/interface/TICLONNXGlobalCache.h"
 #include "RecoHGCal/TICL/interface/TracksterInferenceAlgoBase.h"
 
+
 #include <string>
 #include <vector>
 
-namespace reco {
-  class CaloCluster;
-}
 
 namespace hgcal {
   class RecHitTools;
@@ -23,7 +21,7 @@ namespace ticl {
 
     static void fillPSetDescription(edm::ParameterSetDescription& iDesc);
 
-    void runInference(const std::vector<reco::CaloCluster>& layerClusters,
+    void runInference(const reco::CaloClusterHostCollection& layerClusters,
                       std::vector<Trackster>& tracksters,
                       const hgcal::RecHitTools& rhtools) const override;
 

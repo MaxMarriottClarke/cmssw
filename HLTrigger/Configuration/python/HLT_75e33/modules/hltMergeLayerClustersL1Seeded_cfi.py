@@ -7,6 +7,9 @@ hltMergeLayerClustersL1Seeded = cms.EDProducer("MergeClusterProducer",
 )
 
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
+from Configuration.ProcessModifiers.alpaka_cff import alpaka
+
+
 
 layerClusters = ["hltHgcalLayerClustersEEL1Seeded",
                  "hltHgcalLayerClustersHSciL1Seeded",
@@ -19,3 +22,10 @@ time_layerclusters = ["hltHgcalLayerClustersEEL1Seeded:timeLayerCluster",
                       "hltBarrelLayerClustersEBL1Seeded:timeLayerCluster"]
 
 ticl_barrel.toModify(hltMergeLayerClustersL1Seeded, layerClusters = layerClusters, time_layerclusters = time_layerclusters)
+
+
+(alpaka & ~ticl_barrel).toModify(hltMergeLayerClustersL1Seeded,
+    # layerClusters = ["hltHgcalSoALayerClustersProducerL1Seeded","hltHgcalLayerClustersHSciL1Seeded", "hltHgcalLayerClustersHSiL1Seeded"],
+    layerClusters = ["hltHgcalSoALayerClustersProducerL1Seeded"],
+    time_layerclusters = ["hltHgcalSoALayerClustersProducerL1Seeded:timeLayerCluster", "hltHgcalLayerClustersHSciL1Seeded:timeLayerCluster","hltHgcalLayerClustersHSiL1Seeded:timeLayerCluster"]
+)

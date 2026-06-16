@@ -4,7 +4,7 @@
 #ifndef RecoHGCal_TICL_ClusterFilterByAlgoAndSizeAndLayerRange_H__
 #define RecoHGCal_TICL_ClusterFilterByAlgoAndSizeAndLayerRange_H__
 
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloClusterHostCollection.h"
 #include "ClusterFilterBase.h"
 
 #include <memory>
@@ -23,16 +23,17 @@ namespace ticl {
           max_layerId_(ps.getParameter<int>("max_layerId")) {}
     ~ClusterFilterByAlgoAndSizeAndLayerRange() override {}
 
-    void filter(const std::vector<reco::CaloCluster>& layerClusters,
+    void filter(const reco::CaloClusterHostCollection& layerClusters,
                 std::vector<float>& layerClustersMask,
                 hgcal::RecHitTools& rhtools) const override {
-      for (size_t i = 0; i < layerClusters.size(); i++) {
-        auto const& layerCluster = layerClusters[i];
-        auto const& haf = layerCluster.hitsAndFractions();
-        auto layerId = rhtools.getLayerWithOffset(haf[0].first);
-        if (find(algo_number_.begin(), algo_number_.end(), layerCluster.algo()) == algo_number_.end() or
-            layerId > max_layerId_ or layerId < min_layerId_ or haf.size() > max_cluster_size_ or
-            (haf.size() < min_cluster_size_ and rhtools.isSilicon(haf[0].first))) {
+
+      auto clusters = layerClusters.view();
+      for (size_t i = 0; i < static_cast<size_t>(layerClusters.size()[0]); i++) {
+        auto layerId = rhtools.getLayerWithOffset(clusters.indexes()[i].seedID());
+        const unsigned int nCells = clusters.position()[i].cells();
+        if (find(algo_number_.begin(), algo_number_.end(), clusters.indexes()[i].algoID()) == algo_number_.end() or
+            layerId > max_layerId_ or layerId < min_layerId_ or nCells > max_cluster_size_ or
+            (nCells < min_cluster_size_ and rhtools.isSilicon(clusters.indexes()[i].seedID()))) {
           layerClustersMask[i] = 0.;
         }
       }

@@ -59,6 +59,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     };
 
+    // Widen the rechit DetId into the std::size_t tag column CLUEstering expects.
+    // The tag replaces the point's position in the input array as the key that
+    // breaks exact density ties in the nearest-higher search. That is the rule
+    // the legacy CLUE uses (rho[j] == rho[i] && detid[j] > detid[i]), and it
+    // makes the outcome independent of the order the rechits were written into
+    // the SoA, which the array index is not.
+    struct FillTagsKernel {
+      template <typename TAcc>
+      ALPAKA_FN_ACC void operator()(TAcc const& acc,
+                                    HGCalSoARecHitsDeviceCollection::ConstView inputs,
+                                    std::size_t* tags,
+                                    const uint32_t size) const {
+        for (auto i : uniform_elements(acc, size)) {
+          tags[i] = static_cast<std::size_t>(inputs[i].detid());
+        }
+      }
+    };
+
     // Copy the CLUE intermediates out of the CLUEstering points into the output
     // SoA. Nothing in reconstruction reads them, but without them the SoA dumper
     // reports zeros and the per-cell comparison against the legacy algorithm is
@@ -140,6 +158,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                inputs.energy().data(),
                                                outputs.clusterIndex().data());
     d_points.set_density_uncertainty(std::span<const float>(inputs.sigmaNoise().data(), size));
+
+    // Break exact density ties on the rechit DetId instead of on the point's
+    // position in the input array (see FillTagsKernel). The buffer has to stay
+    // alive until the clustering is done: the points only hold a pointer to it.
+    auto tags = make_device_buffer<std::size_t[]>(queue, size);
+    const auto tagsWorkDiv = make_workdiv<Acc1D>(divide_up_by(size, items), items);
+    alpaka::exec<Acc1D>(queue, tagsWorkDiv, FillTagsKernel{}, inputs, tags.data(), size);
+    d_points.set_tags(std::span<std::size_t>(tags.data(), size));
 
     // Run the batched clustering (one 2D clustering per layer): the per-layer
     // batch sizes are computed once upstream (in the rechit producer) and passed

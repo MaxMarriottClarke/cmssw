@@ -84,7 +84,9 @@ void TSToSimTSHitLCAssociatorByEnergyScoreProducer<HIT>::produce(edm::StreamID,
     edm::LogWarning("TSToSimTSHitLCAssociatorByEnergyScoreProducer")
         << "Hit map not valid. Producing empty associator.";
 
-    const std::unordered_map<DetId, const unsigned int> hitMap;  // empty map
+    // The impl keeps a pointer to the map, which outlives this produce() call: the empty
+    // map must not be a local.
+    static const std::unordered_map<DetId, const unsigned int> hitMap;
     auto impl = std::make_unique<TSToSimTSHitLCAssociatorByEnergyScoreImpl<HIT>>(
         iEvent.productGetter(), hardScatterOnly_, rhtools_, &hitMap, hits);
     auto emptyAssociator = std::make_unique<ticl::TracksterToSimTracksterHitLCAssociator>(std::move(impl));

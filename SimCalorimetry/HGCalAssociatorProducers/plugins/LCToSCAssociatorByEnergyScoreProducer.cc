@@ -35,7 +35,9 @@ void LCToSCAssociatorByEnergyScoreProducerT<HIT, CLUSTER>::produce(edm::StreamID
           << "Hit RefProdVector not available. Producing empty associator.";
     }
 
-    const std::unordered_map<DetId, const unsigned int> hitMap;  // empty map
+    // The impl keeps a pointer to the map, which outlives this produce() call: the empty
+    // map must not be a local.
+    static const std::unordered_map<DetId, const unsigned int> hitMap;
     const multiCollectionT hits;
     auto impl = std::make_unique<LCToSCAssociatorByEnergyScoreImplT<HIT, CLUSTER>>(
         iEvent.productGetter(), hardScatterOnly_, rhtools_, &hitMap, hits);

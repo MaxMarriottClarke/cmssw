@@ -74,3 +74,15 @@ _HgcalTICLPatternRecognitionUnseededSequence_barrel = cms.Sequence(hltFilteredLa
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 ticl_barrel.toReplaceWith(_HgcalLocalRecoUnseededSequence, _HgcalLocalRecoUnseededSequence_barrel)
 ticl_barrel.toReplaceWith(_HgcalTICLPatternRecognitionUnseededSequence, _HgcalTICLPatternRecognitionUnseededSequence_barrel)
+
+# NB: ticl_dev cannot be combined with ticl_barrel. The CLUEstering assignment only
+# covers the HGCal device collections, while ticl_barrel appends barrel layer clusters
+# to the merged collection; the job then fails in the assignment producer on the mask size.
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
+from ..modules.hltTiclTrackstersCLUEsteringAssignment_cfi import *
+
+ticl_dev.toReplaceWith(_HgcalTICLPatternRecognitionUnseededSequence,
+                       cms.Sequence(hltFilteredLayerClustersCLUE3DHigh+
+                                    hltTiclSeedingGlobal+hltTiclLayerTileProducer+
+                                    hltTiclTrackstersCLUEsteringAssignment+
+                                    hltTiclTrackstersCLUE3DHigh))

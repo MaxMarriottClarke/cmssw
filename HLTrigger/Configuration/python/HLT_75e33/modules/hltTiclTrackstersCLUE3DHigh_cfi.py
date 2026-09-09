@@ -150,4 +150,18 @@ hltTiclTrackstersCLUE3DHigh = cms.EDProducer("TrackstersProducer",
     seeding_regions = cms.InputTag("hltTiclSeedingGlobal"),
     time_layerclusters = cms.InputTag("hltMergeLayerClusters","timeLayerCluster")
     )
-    
+
+
+# with ticl_dev 3D pattern recognition swapped to CLUEstering.
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
+
+ticl_dev.toModify(hltTiclTrackstersCLUE3DHigh,
+    patternRecognitionBy = 'CLUEstering',
+    pluginPatternRecognitionByCLUEstering = cms.PSet(
+        algo_verbosity = cms.int32(0),
+        cutHadProb = cms.double(999),
+        doPidCut = cms.bool(True),
+        tracksterAssignment = cms.InputTag('hltTiclTrackstersCLUEsteringAssignment'),
+        type = cms.string('CLUEstering')
+    )
+)

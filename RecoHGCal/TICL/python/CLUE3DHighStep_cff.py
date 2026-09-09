@@ -79,9 +79,11 @@ ticlCLUE3DHighStepTask = cms.Task(ticlSeedingGlobal
 
 
 # with ticl_dev 3D pattern recognition swapped to CLUEstering.
-from Configuration.ProcessModifiers.ticl_dev import ticl_dev
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
 from RecoHGCal.TICL.trackstersCLUEsteringProducer_cfi import trackstersCLUEsteringProducer as _trackstersCLUEsteringProducer
 
+# The cfi defaults already point at hgcalSoALayerClustersEE/HSi/HSci, in the order
+# hgcalMergeLayerClusters merges them, with the matching sigmaT.
 ticlTrackstersCLUEsteringAssignment = _trackstersCLUEsteringProducer.clone()
 
 ticl_dev.toModify(ticlTrackstersCLUE3DHigh,
@@ -90,7 +92,7 @@ ticl_dev.toModify(ticlTrackstersCLUE3DHigh,
         tracksterAssignment = 'ticlTrackstersCLUEsteringAssignment',
         algo_verbosity = 0,
         doPidCut = True,
-        cutHadProb = 999,
+        cutHadProb = 999
     )
 )
 
@@ -98,4 +100,3 @@ ticl_dev.toReplaceWith(ticlCLUE3DHighStepTask, cms.Task(ticlSeedingGlobal
     ,filteredLayerClustersCLUE3DHigh
     ,ticlTrackstersCLUEsteringAssignment
     ,ticlTrackstersCLUE3DHigh))
-

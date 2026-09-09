@@ -73,3 +73,16 @@ _HgcalLocalRecoL1SeededSequence_barrel = cms.Sequence(
     hltMergeLayerClustersL1Seeded
 ) 
 ticl_barrel.toReplaceWith(_HgcalLocalRecoL1SeededSequence, _HgcalLocalRecoL1SeededSequence_barrel)
+
+# NB: ticl_dev cannot be combined with ticl_barrel. The CLUEstering assignment only
+# covers the HGCal device collections, while ticl_barrel appends barrel layer clusters
+# to the merged collection; the job then fails in the assignment producer on the mask size.
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
+from ..modules.hltTiclTrackstersCLUEsteringAssignmentL1Seeded_cfi import *
+
+ticl_dev.toReplaceWith(_HgcalTICLPatternRecognitionL1SeededSequence,
+                       cms.Sequence(hltFilteredLayerClustersCLUE3DHighL1Seeded+
+                                    hltTiclSeedingL1+
+                                    hltTiclLayerTileProducerL1Seeded+
+                                    hltTiclTrackstersCLUEsteringAssignmentL1Seeded+
+                                    hltTiclTrackstersCLUE3DHighL1Seeded))

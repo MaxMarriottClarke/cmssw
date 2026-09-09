@@ -42,3 +42,11 @@ HLTHgcalTiclPFClusteringForEgamma_barrel = cms.Sequence((
 from Configuration.ProcessModifiers.ticl_barrel_cff import ticl_barrel
 ticl_barrel.toReplaceWith(HLTHgcalTiclPFClusteringForEgamma, HLTHgcalTiclPFClusteringForEgamma_barrel)
 
+
+# NB: ticl_dev cannot be combined with ticl_barrel. The CLUEstering assignment only
+# covers the HGCal device collections, while ticl_barrel appends barrel layer clusters
+# to the merged collection; the job then fails in the assignment producer on the mask size.
+from Configuration.ProcessModifiers.ticl_dev_cff import ticl_dev
+from ..modules.hltTiclTrackstersCLUEsteringAssignment_cfi import *
+
+ticl_dev.toReplaceWith(HLTHgcalTiclPFClusteringForEgamma, cms.Sequence((hltHgcalDigis+hltHGCalUncalibRecHit+hltHGCalRecHit+hltParticleFlowRecHitHGC+HLTHgcalLayerClustersSequence+hltMergeLayerClusters+hltFilteredLayerClustersCLUE3DHigh+hltTiclSeedingGlobal+hltTiclLayerTileProducer+hltTiclTrackstersCLUEsteringAssignment+hltTiclTrackstersCLUE3DHigh+hltParticleFlowClusterHGCal+hltParticleFlowSuperClusterHGCal)))
